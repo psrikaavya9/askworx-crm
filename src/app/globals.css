@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --background: #a855f7;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --border: #e5e7eb;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: linear-gradient(135deg, #d25cf6 0%, #a855f7 100%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+main {
+  background: transparent;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+aside ::-webkit-scrollbar-thumb { background: #e5e7eb; }
+
+/* Selection */
+::selection { background: rgba(139, 92, 246, 0.25); color: #1f2937; }
+
+/* Focus */
+:focus-visible { outline: 2px solid #8b5cf6; outline-offset: 2px; }
+
+/* Global transitions */
+* {
+  transition-property: background-color, border-color, color, opacity,
+                        box-shadow, transform, scale, filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+table { border-collapse: collapse; }
+tbody tr { will-change: background-color; }

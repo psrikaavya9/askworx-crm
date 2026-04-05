@@ -1,0 +1,1542 @@
+// ASKworX CRM & Lead Management - Data Models (Module 1)
+// ASKworX Project & Task Management - Data Models (Module 2)
+// ASKworX Stock & Inventory - Data Models (Module 5)
+// ASKworX Customer 360 - Data Models (Module 9)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum PipelineStage {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL
+  WON
+  LOST
+}
+
+enum LeadSource {
+  WEBSITE
+  REFERRAL
+  SOCIAL_MEDIA
+  EMAIL_CAMPAIGN
+  COLD_CALL
+  TRADE_SHOW
+  PARTNER
+  OTHER
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ActivityType {
+  LEAD_CREATED
+  STAGE_CHANGED
+  NOTE_ADDED
+  EMAIL_SENT
+  CALL_MADE
+  MEETING_SCHEDULED
+  MEETING_HELD
+  PROPOSAL_SENT
+  REMINDER_SET
+  REMINDER_COMPLETED
+  LEAD_CONVERTED
+  LEAD_LOST
+  DUPLICATE_FLAGGED  // created despite duplicate warning (override)
+  LEAD_MERGED        // this lead absorbed another (source lead deleted)
+  LEAD_ASSIGNED      // lead assigned or re-assigned to a rep (individual or bulk)
+}
+
+enum ReminderStatus {
+  PENDING
+  COMPLETED
+  DISMISSED
+  OVERDUE
+}
+
+enum ReminderType {
+  FOLLOW_UP
+  COLD_ALERT
+}
+
+enum CompanySize {
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+}
+
+enum ScoreCategory {
+  HOT
+  WARM
+  COLD
+}
+
+// ---------------------------------------------------------------------------
+// Module 2 Enums
+// ---------------------------------------------------------------------------
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+// ---------------------------------------------------------------------------
+// Lead
+// ---------------------------------------------------------------------------
+
+model Lead {
+  id           String        @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String        @unique
+  phone        String?
+  company      String?
+  jobTitle     String?
+
+  source       LeadSource    @default(OTHER)
+  sourceDetail String?       // campaign name, referrer name, etc.
+
+  stage        PipelineStage @default(NEW)
+  priority     LeadPriority  @default(MEDIUM)
+
+  dealValue    Decimal?      @db.Decimal(14, 2)
+  currency     String        @default("USD")
+
+  assignedTo   String?       // User ID (from future Auth module)
+  assignedAt   DateTime?     // when assigned / last re-assigned
+  tags         String[]
+
+  // Scoring fields
+  companySize  CompanySize?
+  industry     String?
+
+  // Relations
+  notes        LeadNote[]
+  activities   LeadActivity[]
+  reminders    FollowUpReminder[]
+  client       Client?       @relation(fields: [clientId], references: [id])
+  clientId     String?
+  score        LeadScore?
+  leadPipeline LeadPipeline?
+
+  // Cold lead detection
+  lastActivityAt DateTime?
+  isCold         Boolean   @default(false)
+
+  // Timestamps
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  contactedAt  DateTime?
+  qualifiedAt  DateTime?
+  proposalAt   DateTime?
+  convertedAt  DateTime?     // set when stage → WON
+  winReason    String?       // reason captured when moved to an isWon stage
+  lostAt       DateTime?     // set when stage → LOST
+  lostReason   String?       // reason captured when moved to an isLost stage
+
+  @@index([stage])
+  @@index([source])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@index([lastActivityAt])
+  @@index([isCold])
+  @@index([phone])                      // duplicate detection — phone lookup
+  @@index([firstName, lastName, company]) // duplicate detection — name+company
+}
+
+// ---------------------------------------------------------------------------
+// Lead Score
+// ---------------------------------------------------------------------------
+
+model LeadScore {
+  id              String        @id @default(cuid())
+  leadId          String        @unique
+  lead            Lead          @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  // Factor breakdown (for analytics)
+  companySizeScore  Int         @default(0)  // max 20
+  industryScore     Int         @default(0)  // max 15
+  sourceScore       Int         @default(0)  // max 15
+  recencyScore      Int         @default(0)  // max 25
+  engagementScore   Int         @default(0)  // max 25
+
+  totalScore        Int         @default(0)  // 0–100
+  category          ScoreCategory @default(COLD)
+
+  calculatedAt      DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([category])
+  @@index([totalScore])
+}
+
+// ---------------------------------------------------------------------------
+// Dynamic Pipeline System
+// ---------------------------------------------------------------------------
+
+model PipelineTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  dealType    String   // PRODUCT | SERVICE | AMC
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stages        PipelineStageConfig[]
+  leadPipelines LeadPipeline[]
+
+  @@index([dealType])
+  @@index([isActive])
+}
+
+model PipelineStageConfig {
+  id          String   @id @default(cuid())
+  templateId  String
+  template    PipelineTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name        String
+  order       Int
+  probability Int      @default(0)   // 0–100 for revenue forecasting
+  color       String   @default("#6366f1")
+  isWon       Boolean  @default(false)
+  isLost      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  currentLeadPipelines LeadPipeline[]     @relation("CurrentStage")
+  historyFrom          LeadStageHistory[] @relation("HistoryFromStage")
+  historyTo            LeadStageHistory[] @relation("HistoryToStage")
+
+  @@unique([templateId, order])
+  @@index([templateId])
+}
+
+model LeadPipeline {
+  id             String   @id @default(cuid())
+  leadId         String   @unique
+  lead           Lead                @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  templateId     String
+  template       PipelineTemplate    @relation(fields: [templateId], references: [id])
+  currentStageId String
+  currentStage   PipelineStageConfig @relation("CurrentStage", fields: [currentStageId], references: [id])
+  stageUpdatedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  history        LeadStageHistory[]
+
+  @@index([templateId])
+  @@index([currentStageId])
+}
+
+model LeadStageHistory {
+  id             String   @id @default(cuid())
+  leadPipelineId String
+  leadPipeline   LeadPipeline         @relation(fields: [leadPipelineId], references: [id], onDelete: Cascade)
+  fromStageId    String?
+  fromStage      PipelineStageConfig? @relation("HistoryFromStage", fields: [fromStageId], references: [id])
+  toStageId      String
+  toStage        PipelineStageConfig  @relation("HistoryToStage", fields: [toStageId], references: [id])
+  changedBy      String
+  reason         String?              // required for backward moves
+  createdAt      DateTime @default(now())
+
+  @@index([leadPipelineId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Lead Note
+// ---------------------------------------------------------------------------
+
+model LeadNote {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content   String   @db.Text
+  createdBy String   // User ID
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([leadId])
+}
+
+// ---------------------------------------------------------------------------
+// Lead Activity Log
+// ---------------------------------------------------------------------------
+
+model LeadActivity {
+  id          String       @id @default(cuid())
+  leadId      String
+  lead        Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        ActivityType
+  description String
+  metadata    Json?        // e.g. { fromStage: "NEW", toStage: "CONTACTED" }
+  performedBy String       // User ID
+  createdAt   DateTime     @default(now())
+
+  @@index([leadId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Follow-Up Reminder
+// ---------------------------------------------------------------------------
+
+model FollowUpReminder {
+  id          String         @id @default(cuid())
+  leadId      String
+  lead        Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type        ReminderType   @default(FOLLOW_UP)
+  title       String
+  description String?
+  dueAt       DateTime
+  status      ReminderStatus @default(PENDING)
+  assignedTo  String         // User ID
+  createdBy   String         // User ID
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  completedAt DateTime?
+
+  @@index([leadId])
+  @@index([assignedTo])
+  @@index([dueAt])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Client (converted Lead)
+// ---------------------------------------------------------------------------
+
+model Client {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  email       String   @unique
+  phone       String?
+  company     String
+  jobTitle    String?
+  website     String?
+
+  // Address
+  address     String?
+  city        String?
+  state       String?
+  country     String?
+  postalCode  String?
+
+  // Relations
+  leads       Lead[]    // original leads that converted to this client
+  projects    Project[] // Module 2: Project & Task
+
+  // Module 4: Finance & Invoicing
+  invoices    Invoice[]
+  expenses    Expense[]
+
+  // Module 9: Customer 360
+  interactions CustomerInteraction[]
+  complaints   Complaint[]
+  healthScores CustomerHealthScore[]
+
+  // Geo coordinates — used by expense GPS validation (Layer 2)
+  // Populated by admin or via future geocoding; nullable for backward compat.
+  lat         Float?
+  lng         Float?
+
+  // Metadata
+  assignedTo  String?  // Account manager (User ID)
+  notes       String?  @db.Text
+  tags        String[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([company])
+  @@index([assignedTo])
+}
+
+// ---------------------------------------------------------------------------
+// Lead Capture Form (embeddable on website)
+// ---------------------------------------------------------------------------
+
+model LeadCaptureForm {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique  // e.g. "contact-us" → /api/crm/capture/contact-us
+  description  String?
+
+  // Configurable fields stored as JSON array of FormField objects:
+  // { name, label, type, required, options? }
+  fields       Json
+
+  // Defaults applied to leads captured via this form
+  defaultStage  PipelineStage @default(NEW)
+  defaultSource LeadSource    @default(WEBSITE)
+  assignedTo    String?       // Default assignee User ID
+
+  redirectUrl   String?       // After successful submission
+  thankYouMsg   String?
+
+  isActive      Boolean  @default(true)
+
+  submissions   LeadCaptureSubmission[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+// ---------------------------------------------------------------------------
+// Lead Capture Submission log
+// ---------------------------------------------------------------------------
+
+model LeadCaptureSubmission {
+  id         String          @id @default(cuid())
+  formId     String
+  form       LeadCaptureForm @relation(fields: [formId], references: [id], onDelete: Cascade)
+  data       Json            // raw submitted field values
+  leadId     String?         // set after lead is created from this submission
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime        @default(now())
+
+  @@index([formId])
+  @@index([leadId])
+}
+
+// ---------------------------------------------------------------------------
+// Project (Module 2)
+// ---------------------------------------------------------------------------
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?       @db.Text
+  startDate   DateTime?
+  deadline    DateTime?
+  status      ProjectStatus @default(PLANNING)
+
+  // Relations
+  clientId    String?
+  client      Client?       @relation(fields: [clientId], references: [id])
+  tasks       Task[]
+
+  // Module 4: Finance & Invoicing
+  invoices    Invoice[]
+  expenses    Expense[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+  @@index([deadline])
+}
+
+// ---------------------------------------------------------------------------
+// Task (Module 2)
+// ---------------------------------------------------------------------------
+
+model Task {
+  id            String       @id @default(cuid())
+  projectId     String
+  project       Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?      @db.Text
+  assignedStaff String[]     // User IDs
+  status        TaskStatus   @default(TODO)
+  priority      TaskPriority @default(MEDIUM)
+  dueDate       DateTime?
+  hoursLogged   Decimal      @default(0) @db.Decimal(8, 2)
+
+  // Relations
+  timeLogs      TimeLog[]
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@index([dueDate])
+}
+
+// ---------------------------------------------------------------------------
+// TimeLog (Module 2)
+// ---------------------------------------------------------------------------
+
+model TimeLog {
+  id       String   @id @default(cuid())
+  taskId   String
+  task     Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  hours    Decimal  @db.Decimal(6, 2)
+  note     String?  @db.Text
+  loggedAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([loggedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Module 4 Enums
+// ---------------------------------------------------------------------------
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK
+  UPI
+  CARD
+}
+
+enum ExpenseStatus {
+  // Legacy — kept for backward compatibility with existing records
+  PENDING
+
+  // Module 10 — Layer 4: Approval Routing statuses
+  DRAFT             // saved but not submitted
+  VALIDATING        // submission in flight (attendance / GPS / receipt checks)
+  AUTO_REJECTED     // hard-rejected by a validation layer
+  PENDING_ACCOUNTS  // awaiting accounts-team approval (₹500 – ₹2000)
+  PENDING_OWNER     // awaiting owner approval (> ₹2000, or flagged)
+  APPROVED          // approved (auto or manual)
+  REJECTED          // manually rejected after review
+  REIMBURSED        // payment has been processed
+}
+
+// ---------------------------------------------------------------------------
+// Invoice (Module 4)
+// ---------------------------------------------------------------------------
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  clientId      String
+  client        Client        @relation(fields: [clientId], references: [id])
+  projectId     String?
+  project       Project?      @relation(fields: [projectId], references: [id])
+  issueDate     DateTime
+  dueDate       DateTime
+  subtotal      Decimal       @db.Decimal(14, 2)
+  cgst          Decimal       @default(0) @db.Decimal(14, 2)
+  sgst          Decimal       @default(0) @db.Decimal(14, 2)
+  igst          Decimal       @default(0) @db.Decimal(14, 2)
+  totalTax      Decimal       @default(0) @db.Decimal(14, 2)
+  totalAmount   Decimal       @db.Decimal(14, 2)
+  status        InvoiceStatus @default(DRAFT)
+  notes         String?       @db.Text
+
+  items         InvoiceItem[]
+  payments      Payment[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([projectId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([issueDate])
+}
+
+// ---------------------------------------------------------------------------
+// InvoiceItem (Module 4)
+// ---------------------------------------------------------------------------
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Decimal @db.Decimal(10, 3)
+  unitPrice   Decimal @db.Decimal(14, 2)
+  total       Decimal @db.Decimal(14, 2)
+
+  @@index([invoiceId])
+}
+
+// ---------------------------------------------------------------------------
+// Payment (Module 4)
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id              String        @id @default(cuid())
+  invoiceId       String
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount          Decimal       @db.Decimal(14, 2)
+  paymentDate     DateTime
+  paymentMethod   PaymentMethod
+  referenceNumber String?
+  notes           String?       @db.Text
+
+  createdAt       DateTime      @default(now())
+
+  @@index([invoiceId])
+  @@index([paymentDate])
+}
+
+// ---------------------------------------------------------------------------
+// Expense (Module 4)
+// ---------------------------------------------------------------------------
+
+model Expense {
+  id          String        @id @default(cuid())
+  staffId     String?
+  staff       Staff?        @relation(fields: [staffId], references: [id])
+  category    String
+  amount      Decimal       @db.Decimal(14, 2)
+  description String?       @db.Text
+  receiptUrl  String?
+  date        DateTime
+  status      ExpenseStatus @default(PENDING)
+
+  // Module 10 — Smart Expense Engine (Part 1)
+  paymentMode String?       // CASH | UPI | CARD | COMPANY_ACCOUNT
+  gpsLat      Float?
+  gpsLng      Float?
+  clientId    String?
+  client      Client?       @relation(fields: [clientId], references: [id])
+  projectId   String?
+  project     Project?      @relation(fields: [projectId], references: [id])
+
+  // Module 10 — Layer 2: GPS Validation
+  // Set server-side by validateGPS(); never accepted from the request body.
+  isFlagged   Boolean       @default(false)
+  flagReason  String?       @db.Text
+
+  // Module 10 — Layer 4: Approval Audit
+  // All fields set server-side; staffId refs are soft (no FK constraint).
+  rejectionReason  String?   @db.Text
+  approvedBy       String?   // staffId of approver
+  rejectedBy       String?   // staffId of rejecter
+  reimbursedBy     String?   // staffId of who processed reimbursement
+  approvedAt       DateTime?
+  rejectedAt       DateTime?
+  reimbursedAt     DateTime?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([staffId])
+  @@index([status])
+  @@index([date])
+  @@index([category])
+  @@index([isFlagged])
+}
+
+// ---------------------------------------------------------------------------
+// PreApproval (Module 10 — Layer 3: Receipt Validation)
+//
+// A manager-granted pre-approval that allows a staff member to submit an
+// expense ≥ ₹5000 without being rejected by the receipt-validation layer.
+// ---------------------------------------------------------------------------
+
+enum PreApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PreApproval {
+  id        String             @id @default(cuid())
+  staffId   String
+  staff     Staff              @relation(fields: [staffId], references: [id])
+  amount    Decimal            @db.Decimal(14, 2)
+  status    PreApprovalStatus  @default(PENDING)
+  validDate DateTime           // the expense date the approval covers
+  category  String?            // optional — limits approval to a specific category
+  notes     String?            @db.Text
+
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  @@index([staffId])
+  @@index([status])
+  @@index([validDate])
+}
+
+// ---------------------------------------------------------------------------
+// Module 3 Enums
+// ---------------------------------------------------------------------------
+
+enum StaffRole {
+  OWNER
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  STAFF
+}
+
+enum OtpPurpose {
+  MFA
+  PASSWORD_RESET
+}
+
+enum StaffStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AttendanceStatus {
+  // ── Interim (set at check-in, before checkout) ──────────────────────────
+  PRESENT      // checked in on time; awaiting checkout
+  LATE         // checked in after 09:30 UTC; awaiting checkout
+
+  // ── Final (computed at checkout or end-of-day) ──────────────────────────
+  FULL_DAY     // ≥8h worked, on time, no early exit
+  HALF_DAY     // 4–7.9h worked, OR check-in after 13:00 UTC
+  LATE_ARRIVAL // @deprecated — superseded by LATE; kept for PG enum compat
+  EARLY_EXIT   // checked out before 17:30 UTC (final)
+
+  // ── Special states (highest priority) ───────────────────────────────────
+  ABSENT       // no check-in record by 12:00 UTC
+  ON_LEAVE     // approved leave
+  FIELD_VISIT  // active field visit (outside geo-fence)
+  WFH          // working from home
+}
+
+enum CheckInMethod {
+  GPS
+  SELFIE
+  QR
+}
+
+enum ValidationStatus {
+  VALID
+  FLAGGED
+  REJECTED
+}
+
+enum FieldVisitStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ---------------------------------------------------------------------------
+// Module 9 Enums — Customer 360
+// ---------------------------------------------------------------------------
+
+enum InteractionType {
+  CALL
+  VISIT
+  NOTE
+  EMAIL      // auto-logged via BCC webhook
+  WHATSAPP   // auto-logged via Twilio webhook
+}
+
+enum InteractionDirection {
+  INBOUND    // customer → rep
+  OUTBOUND   // rep → customer
+}
+
+enum ComplaintPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+// ---------------------------------------------------------------------------
+// Staff (Module 3)
+// ---------------------------------------------------------------------------
+
+model Staff {
+  id           String      @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String      @unique
+  phone        String?
+  role         StaffRole   @default(STAFF)
+  department   String?
+  status       StaffStatus @default(ACTIVE)
+  passwordHash         String?
+  isMfaEnabled         Boolean   @default(false)
+  mfaFailures          Int       @default(0)
+  isLocked             Boolean   @default(false)
+  lockedAt             DateTime?
+  lockedBy             String?   // staffId of OWNER who locked/unlocked
+  forcePasswordReset   Boolean   @default(false)
+  passwordChangedAt    DateTime?
+
+  attendances          Attendance[]
+  expenses             Expense[]
+  preApprovals         PreApproval[]
+  fieldVisits          FieldVisit[]
+  customerInteractions CustomerInteraction[]
+  refreshTokens        RefreshToken[]
+  otpCodes        OtpCode[]
+  trustedDevices  TrustedDevice[]
+  sessions        Session[]
+  passwordHistory PasswordHistory[]
+  loginEvents     LoginEvent[]
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([status])
+  @@index([role])
+  @@index([department])
+}
+
+// ---------------------------------------------------------------------------
+// Auth — Refresh Token store (Module: Auth)
+// ---------------------------------------------------------------------------
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  jti       String    @unique        // UUID embedded in the JWT (for revocation lookup)
+  staffId   String
+  staff     Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([staffId])
+  @@index([expiresAt])
+}
+
+model OtpCode {
+  id          String     @id @default(cuid())
+  staffId     String
+  staff       Staff      @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  codeHash    String                     // bcrypt hash of 6-digit code
+  purpose     OtpPurpose
+  expiresAt   DateTime                   // extended to now+15min after 3 failures (OTP lock)
+  attempts    Int        @default(0)     // incremented on every wrong guess
+  usedAt      DateTime?                  // set when code is consumed successfully
+  createdAt   DateTime   @default(now())
+
+  @@index([staffId, purpose])
+}
+
+model TrustedDevice {
+  id            String   @id @default(cuid())
+  staffId       String
+  staff         Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  fingerprint   String                   // sha256(userAgent + ip)
+  label         String?                  // e.g. "Chrome on Windows"
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  @@unique([staffId, fingerprint])
+  @@index([staffId])
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  staffId      String
+  staff        Staff     @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  jti          String    @unique          // matches RefreshToken.jti
+  ipAddress    String?
+  userAgent    String?
+  browser      String?                   // e.g. "Chrome", "Firefox"
+  deviceName   String?                   // e.g. "Windows", "macOS", "iPhone"
+  deviceLabel  String?                   // combined "Chrome on Windows" (legacy / display)
+  lastActiveAt DateTime  @default(now())
+  revokedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([staffId])
+  @@index([revokedAt])
+}
+
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  staffId      String
+  staff        Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@index([staffId])
+}
+
+model LoginEvent {
+  id           String   @id @default(cuid())
+  staffId      String
+  staff        Staff    @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  ipAddress    String?
+  userAgent    String?
+  fingerprint  String?
+  success      Boolean
+  failReason   String?
+  suspicious   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([staffId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Attendance (Module 3)
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Module 5 Enums
+// ---------------------------------------------------------------------------
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUSTMENT
+}
+
+// ---------------------------------------------------------------------------
+// Product (Module 5)
+// ---------------------------------------------------------------------------
+
+model Product {
+  id            String          @id @default(cuid())
+  name          String
+  sku           String          @unique
+  description   String?         @db.Text
+  category      String
+  unitPrice     Decimal         @db.Decimal(14, 2)
+  costPrice     Decimal         @db.Decimal(14, 2)
+  unit          String          @default("pcs")
+  stockQuantity Int             @default(0)
+  minimumStock  Int             @default(0)
+
+  movements     StockMovement[]
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([category])
+  @@index([sku])
+  @@index([stockQuantity])
+}
+
+// ---------------------------------------------------------------------------
+// StockMovement (Module 5)
+// ---------------------------------------------------------------------------
+
+model StockMovement {
+  id        String            @id @default(cuid())
+  productId String
+  product   Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      StockMovementType
+  quantity  Int
+  reference String?
+  notes     String?           @db.Text
+  createdAt DateTime          @default(now())
+
+  @@index([productId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Module 6 Part 4 — Custom Report Builder
+// ---------------------------------------------------------------------------
+
+model SavedReport {
+  id             String            @id @default(cuid())
+  name           String
+  module         String            // e.g. "CRM_LEADS", "INVOICES"
+  selectedFields Json              // string[]
+  filters        Json              // FilterCondition[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  executions     ReportExecution[]
+
+  @@index([module])
+  @@index([createdAt])
+}
+
+model ReportExecution {
+  id          String      @id @default(cuid())
+  reportId    String
+  report      SavedReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  executedAt  DateTime    @default(now())
+  resultCount Int
+
+  @@index([reportId])
+  @@index([executedAt])
+}
+
+model Attendance {
+  id               String           @id @default(cuid())
+  staffId          String
+  staff            Staff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  date             DateTime         // normalized to midnight UTC (date-only semantics)
+
+  checkInTime      DateTime?
+  checkOutTime     DateTime?
+
+  checkInLocation  String?          // "lat,lng"
+  checkOutLocation String?
+
+  checkInSelfie    String?          // base64 data URL or external URL
+  checkOutSelfie   String?
+
+  selfieUrl        String?          // public URL of the saved check-in selfie photo
+  confidenceScore  Int              @default(0)  // 0–100: GPS=+50, Selfie=+30, QR=+20
+  validationStatus ValidationStatus @default(FLAGGED) // VALID(≥70), FLAGGED(40-69), REJECTED(<40)
+
+  // Signal flags — which verification methods contributed to the score
+  hasGPS           Boolean          @default(false)
+  hasSelfie        Boolean          @default(false)
+  hasQR            Boolean          @default(false)
+
+  method           CheckInMethod?   // primary check-in method: GPS | SELFIE | QR
+  qrToken          String?          // token used when method = QR
+
+  // Checkout metadata (Module 8)
+  checkOutGPS      String?          // "lat,lng" captured at checkout
+  isRemoteCheckout Boolean          @default(false) // true if checkout GPS outside office
+
+  // Rich attendance status fields (Module 8 — status engine)
+  totalHours       Decimal?         @db.Decimal(5, 2)  // hours worked (checkout − checkin)
+  isEarlyExit      Boolean          @default(false)    // checkout before 17:30 UTC
+  isWFH            Boolean          @default(false)    // staff declared WFH
+  isOnLeave        Boolean          @default(false)    // approved leave record exists
+
+  attendanceStatus AttendanceStatus @default(PRESENT)
+
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@unique([staffId, date])
+  @@index([staffId])
+  @@index([date])
+  @@index([attendanceStatus])
+}
+
+// ---------------------------------------------------------------------------
+// Module 7 Enums — HR Document & Video Vault
+// ---------------------------------------------------------------------------
+
+enum DocumentCategory {
+  POLICY
+  CONTRACT
+  HANDBOOK
+  FORM
+  SOP
+  COMPLIANCE
+  OTHER
+}
+
+enum DocumentStatus {
+  ACTIVE
+  ARCHIVED
+  EXPIRED
+}
+
+enum VaultAccessLevel {
+  ALL
+  MANAGER_ONLY
+  HR_ONLY
+  CUSTOM
+}
+
+enum VideoCategory {
+  ONBOARDING
+  TRAINING
+  SAFETY
+  COMPLIANCE
+  GENERAL
+}
+
+enum VideoStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// HrDocument (Module 7)
+// ---------------------------------------------------------------------------
+
+model HrDocument {
+  id            String           @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?          @db.Text
+  category      DocumentCategory @default(OTHER)
+
+  fileUrl       String
+  fileKey       String
+  fileType      String
+  fileSize      Int
+
+  version       Int              @default(1)
+  parentId      String?          @db.Uuid
+  parent        HrDocument?      @relation("DocumentVersions", fields: [parentId], references: [id])
+  versions      HrDocument[]     @relation("DocumentVersions")
+  isLatest      Boolean          @default(true)
+
+  accessLevel   VaultAccessLevel @default(ALL)
+  allowedRoles  String[]
+  allowedStaff  String[]
+
+  tags          String[]
+  metadata      Json             @default("{}")
+  requiresAck   Boolean          @default(false)
+  expiresAt     DateTime?
+  status        DocumentStatus   @default(ACTIVE)
+  warningLevel  String           @default("none")
+  employeeId    String?
+
+  uploadedBy    String
+
+  acknowledgements DocAcknowledgement[]
+  complianceItems  ComplianceItem[]
+
+  isDeleted     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([parentId])
+  @@index([category])
+  @@index([status])
+  @@index([accessLevel])
+  @@index([expiresAt])
+  @@index([isLatest])
+  @@index([uploadedBy])
+  @@index([isDeleted])
+}
+
+// ---------------------------------------------------------------------------
+// DocAcknowledgement (Module 7)
+// ---------------------------------------------------------------------------
+
+model DocAcknowledgement {
+  id             String     @id @default(uuid()) @db.Uuid
+  documentId     String     @db.Uuid
+  document       HrDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  staffId        String
+
+  acknowledgedAt DateTime   @default(now())
+  ipAddress      String?
+  userAgent      String?
+  signature      String?    @db.Text
+  notes          String?    @db.Text
+
+  isDeleted      Boolean    @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([documentId, staffId])
+  @@index([documentId])
+  @@index([staffId])
+}
+
+// ---------------------------------------------------------------------------
+// HrVideo (Module 7)
+// ---------------------------------------------------------------------------
+
+model HrVideo {
+  id            String           @id @default(uuid()) @db.Uuid
+  title         String
+  description   String?          @db.Text
+  category      VideoCategory    @default(GENERAL)
+
+  originalUrl   String
+  processedUrl  String?
+  thumbnailUrl  String?
+  fileKey       String
+  fileSize      BigInt
+  duration      Int?
+
+  status        VideoStatus      @default(PROCESSING)
+  accessLevel   VaultAccessLevel @default(ALL)
+  allowedRoles  String[]
+  allowedStaff  String[]
+
+  tags          String[]
+  metadata      Json             @default("{}")
+  isRequired    Boolean          @default(false)
+  expiresAt     DateTime?
+
+  uploadedBy    String
+  watchLogs     VideoWatchLog[]
+
+  isDeleted     Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@index([accessLevel])
+  @@index([isRequired])
+  @@index([expiresAt])
+  @@index([uploadedBy])
+  @@index([isDeleted])
+}
+
+// ---------------------------------------------------------------------------
+// VideoWatchLog (Module 7)
+// ---------------------------------------------------------------------------
+
+model VideoWatchLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  videoId        String   @db.Uuid
+  video          HrVideo  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  staffId        String
+
+  watchedSeconds Int      @default(0)
+  totalSeconds   Int      @default(0)
+  percentage     Decimal  @default(0) @db.Decimal(5, 2)
+  completed      Boolean  @default(false)
+  lastPosition   Int      @default(0)
+  sessionData    Json     @default("{}")
+
+  isDeleted      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([videoId, staffId])
+  @@index([videoId])
+  @@index([staffId])
+  @@index([completed])
+}
+
+// ---------------------------------------------------------------------------
+// Module 7 — Video Quiz System
+// ---------------------------------------------------------------------------
+
+model VideoQuiz {
+  id        String   @id @default(uuid()) @db.Uuid
+  videoId   String   @unique           // UUID ref to vault-server HrVideo
+  passMark  Int      @default(70)      // minimum % to pass
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  questions VideoQuizQuestion[]
+  attempts  VideoQuizAttempt[]
+
+  @@index([videoId])
+}
+
+model VideoQuizQuestion {
+  id          String    @id @default(uuid()) @db.Uuid
+  quizId      String    @db.Uuid
+  quiz        VideoQuiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question    String
+  options     Json                    // string[]  (4 choices)
+  correctIdx  Int                     // 0-based index of correct option
+  explanation String?                 // shown after submit
+  order       Int       @default(0)
+
+  @@index([quizId])
+}
+
+model VideoQuizAttempt {
+  id          String    @id @default(uuid()) @db.Uuid
+  quizId      String    @db.Uuid
+  quiz        VideoQuiz @relation(fields: [quizId], references: [id])
+  videoId     String                  // denormalized for fast lookup
+  staffId     String    @default("staff-001")  // TODO: real auth
+  answers     Json                    // Record<questionId, number>
+  score       Float                   // 0-100
+  passed      Boolean
+  attemptedAt DateTime  @default(now())
+
+  @@index([videoId, staffId])
+  @@index([quizId])
+}
+
+// ---------------------------------------------------------------------------
+// FieldVisit (Module 8 — Smart Attendance)
+// ---------------------------------------------------------------------------
+
+model FieldVisit {
+  id          String           @id @default(cuid())
+  staffId     String
+  staff       Staff            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  date        DateTime         // date of the field visit (midnight UTC)
+  clientName  String?          // client/location being visited
+  purpose     String           // reason for the visit
+  status      FieldVisitStatus @default(PENDING)
+
+  // GPS route: array of { lat, lng, timestamp } waypoints logged ~every 5 min
+  gpsRoute    Json             @default("[]")
+  distanceKm  Decimal?         @db.Decimal(8, 2)
+
+  notes       String?          @db.Text
+
+  // Approval
+  approvedBy  String?          // staff ID (owner/manager)
+  approvedAt  DateTime?
+  rejectedBy  String?
+  rejectedAt  DateTime?
+  reviewNote  String?          @db.Text
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([staffId])
+  @@index([date])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Module 9 — Customer 360
+// ---------------------------------------------------------------------------
+
+// CustomerInteraction tracks all touchpoints (calls, visits, notes) between
+// staff and a client.  Visits carry optional GPS coordinates and photo
+// attachments; calls carry a duration.  The approved/rejected flags allow
+// an owner/manager to review field interactions before they are counted.
+model CustomerInteraction {
+  id           String          @id @default(cuid())
+
+  clientId     String
+  client       Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  staffId      String
+  staff        Staff           @relation(fields: [staffId], references: [id])
+
+  type         InteractionType
+
+  date         DateTime
+
+  // CALL / VISIT: duration in minutes
+  duration     Int?
+
+  // Free-text outcome summary (e.g. "Demo scheduled", "No answer")
+  outcome      String?
+
+  notes        String?         @db.Text
+
+  // VISIT: GPS coordinates captured at the time of the visit
+  gpsLat       Float?
+  gpsLng       Float?
+
+  // VISIT: JSON array of photo URLs (String[])
+  photos       Json?
+
+  nextFollowUp DateTime?
+
+  // ── EMAIL / WHATSAPP — auto-logged via webhooks ──────────────────────────
+  // Message body (email plain-text or WhatsApp text)
+  messageContent    String?             @db.Text
+  // Email subject line
+  messageSubject    String?
+  // INBOUND = customer → rep, OUTBOUND = rep → customer
+  direction         InteractionDirection?
+  // Twilio MessageSid or email Message-ID — used for deduplication
+  externalId        String?
+  // Counterparty contact info (client's email for EMAIL, phone for WHATSAPP)
+  counterpartyEmail String?
+  counterpartyPhone String?
+
+  // Owner/manager approval workflow
+  approved     Boolean         @default(false)
+  rejected     Boolean         @default(false)
+  ownerNote    String?         @db.Text
+
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([clientId])
+  @@index([staffId])
+  @@index([type])
+  @@index([date])
+  @@index([approved])
+  @@index([nextFollowUp])
+  @@index([externalId])         // deduplication lookups
+  // Composite indexes for production query patterns:
+  @@index([clientId, date])       // timeline: WHERE clientId ORDER BY date DESC
+  @@index([clientId, approved])   // review dashboard: WHERE clientId AND approved=false
+  @@index([staffId, date])        // staff history queries
+}
+
+// Complaint captures client grievances, tracks their priority and lifecycle,
+// and records resolution details when the complaint is closed.
+model Complaint {
+  id          String            @id @default(cuid())
+
+  clientId    String
+  client      Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Staff member who logged this complaint (staffId, optional for system imports)
+  raisedBy    String?
+
+  description String            @db.Text
+
+  priority    ComplaintPriority @default(MEDIUM)
+  status      ComplaintStatus   @default(OPEN)
+
+  // Staff member currently responsible for resolution
+  assignedTo  String?
+
+  // Resolution details — populated when status → RESOLVED / CLOSED
+  resolution  String?           @db.Text
+  resolvedAt  DateTime?
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedTo])
+  @@index([createdAt])
+  @@index([clientId, status])     // health score: WHERE clientId GROUP BY status
+  @@index([clientId, priority])   // critical complaint filter in health score
+}
+
+// CustomerHealthScore stores a point-in-time composite health score for a
+// client.  Each run appends a new row so trend history is preserved.
+// The latest score is fetched with: orderBy: { calculatedAt: 'desc' }, take: 1
+model CustomerHealthScore {
+  id               String   @id @default(cuid())
+
+  clientId         String
+  client           Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  // Composite score (0–100): weighted sum of the five component scores below
+  score            Int
+
+  // Component scores (0–100 each) ─────────────────────────────────────────
+  // Derived from: invoice payment timeliness, outstanding balances
+  paymentScore     Int
+
+  // Derived from: meeting/call responsiveness, open rates (future)
+  engagementScore  Int
+
+  // Derived from: frequency of CALL / VISIT / NOTE interactions
+  interactionScore Int
+
+  // Inverse metric: open or unresolved complaints lower this score
+  complaintScore   Int
+
+  // Derived from: total revenue generated, growth vs previous period
+  revenueScore     Int
+
+  calculatedAt     DateTime @default(now())
+
+  @@index([clientId])
+  @@index([calculatedAt])
+  @@index([score])
+  @@index([clientId, calculatedAt]) // findFirst WHERE clientId ORDER BY calculatedAt DESC
+}
+
+// ---------------------------------------------------------------------------
+// Compliance Module
+// ---------------------------------------------------------------------------
+
+enum ComplianceType {
+  INTERNAL   // internal process (SOP, policy review, etc.)
+  STATUTORY  // legal / regulatory obligation
+}
+
+enum ComplianceFrequency {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum ComplianceStatus {
+  PENDING    // scheduled, not due soon
+  UPCOMING   // due within the next 7 days
+  OVERDUE    // past next_due_date and not completed
+  COMPLETED  // marked done; next cycle will be auto-calculated
+}
+
+model ComplianceItem {
+  id          String              @id @default(cuid())
+  title       String
+  type        ComplianceType
+  frequency   ComplianceFrequency
+  lastDoneDate DateTime?          // null until first completion
+  nextDueDate  DateTime
+  status      ComplianceStatus    @default(PENDING)
+  notes       String?             @db.Text
+
+  // Optional link to an HrDocument whose expiry drives this obligation.
+  // When set, the compliance service checks whether the document is expired
+  // and overrides status to OVERDUE regardless of nextDueDate.
+  hrDocumentId String?            @db.Uuid
+  hrDocument   HrDocument?        @relation(fields: [hrDocumentId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([status])
+  @@index([nextDueDate])
+  @@index([type])
+  @@index([hrDocumentId])
+}
+
+// ---------------------------------------------------------------------------
+// ExpenseCategoryBudget — monthly spending limit per expense category
+// ---------------------------------------------------------------------------
+
+model ExpenseCategoryBudget {
+  id           String   @id @default(cuid())
+  category     String   @unique  // matches Expense.category values
+  monthlyLimit Decimal  @db.Decimal(14, 2)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// AuditLog — immutable record of critical system actions
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?  // staffId — nullable for system-initiated or anonymous events
+  action     String   // e.g. "EXPENSE_CREATED", "INVOICE_UPDATED", "LOGIN_SUCCESS"
+  entityType String   // e.g. "expense", "invoice", "auth"
+  entityId   String?  // the affected record id, if applicable
+  metadata   Json?    // arbitrary context (amount, status changes, ip, etc.)
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}

@@ -1,0 +1,532 @@
+### Module 7 — HR Vault + Video + Quiz + Expiry
+### REST Client file (VS Code REST Client extension / IntelliJ HTTP Client)
+###
+### Prerequisites:
+###   1. node scripts/seedModule7.js
+###   2. cd vault-server && npm run dev     (port 4001)
+###   3. npm run dev                        (port 3000)
+###
+### Seed staff IDs: seed-admin-001, seed-mgr-001, seed-mgr-002,
+###                 seed-emp-001 through seed-emp-005
+###
+### JWT tokens below are placeholders — replace with real tokens from your
+### auth system or use the vault-server's test token helper if available.
+
+@vaultBase = http://localhost:4001
+@appBase   = http://localhost:3000
+
+### ─────────────────────────────────────────────────────────────
+### AUTH TOKENS (replace with real JWTs from your auth system)
+### ─────────────────────────────────────────────────────────────
+
+@adminToken   = Bearer REPLACE_WITH_ADMIN_JWT
+@managerToken = Bearer REPLACE_WITH_MANAGER_JWT
+@employeeToken = Bearer REPLACE_WITH_EMPLOYEE_JWT
+
+### Use seed staff IDs directly in x-user-id header if vault-server
+### reads from that header instead of JWT sub:
+@adminId   = seed-admin-001
+@managerId = seed-mgr-001
+@empId     = seed-emp-001
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 1: DOCUMENTS
+### ═══════════════════════════════════════════════════════════════
+
+### --- 1.1 List all documents (admin) ---
+# @name listDocs
+GET {{vaultBase}}/documents
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.2 List with search ---
+GET {{vaultBase}}/documents?search=safety
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.3 Filter by category ---
+GET {{vaultBase}}/documents?category=POLICY
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.4 Filter by status=ACTIVE ---
+GET {{vaultBase}}/documents?status=ACTIVE
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.5 Filter by warningLevel=high (critical docs) ---
+GET {{vaultBase}}/documents?warningLevel=high&status=ACTIVE
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.6 Filter expired docs ---
+GET {{vaultBase}}/documents?status=EXPIRED
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.7 Pagination ---
+GET {{vaultBase}}/documents?page=1&limit=5
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.8 Get document alerts (admin/manager only) ---
+# @name getAlerts
+GET {{vaultBase}}/documents/alerts
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.9 Get alerts as employee (expect 403) ---
+GET {{vaultBase}}/documents/alerts
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+
+###
+
+### --- 1.10 Get single document ---
+# Replace DOC_ID with a real ID from listDocs response
+@docId = REPLACE_WITH_DOC_ID
+
+GET {{vaultBase}}/documents/{{docId}}
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.11 Upload document (multipart) ---
+# Use curl for binary upload:
+# curl -X POST http://localhost:4001/documents \
+#   -H "Authorization: Bearer <token>" \
+#   -H "x-user-id: seed-admin-001" \
+#   -F "file=@/path/to/policy.pdf" \
+#   -F "title=Test Policy Upload" \
+#   -F "category=POLICY" \
+#   -F "accessLevel=ALL" \
+#   -F "requiresAck=true" \
+#   -F "expiresAt=2026-04-01T00:00:00Z"
+
+### --- 1.12 Archive a document ---
+PATCH {{vaultBase}}/documents/{{docId}}
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+Content-Type: application/json
+
+{
+  "status": "ARCHIVED"
+}
+
+###
+
+### --- 1.13 Delete document (soft delete) ---
+DELETE {{vaultBase}}/documents/{{docId}}
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 1.14 Employee cannot upload (expect 403) ---
+# (Would require multipart — just test PATCH to show RBAC)
+PATCH {{vaultBase}}/documents/{{docId}}
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+Content-Type: application/json
+
+{
+  "status": "ARCHIVED"
+}
+
+###
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 2: ACKNOWLEDGEMENTS
+### ═══════════════════════════════════════════════════════════════
+
+### --- 2.1 Acknowledge a document ---
+# Replace with a doc ID that has requiresAck=true from seed data
+@ackDocId = REPLACE_WITH_REQUIRES_ACK_DOC_ID
+
+POST {{vaultBase}}/documents/{{ackDocId}}/acknowledge
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+Content-Type: application/json
+
+{
+  "signature": "John Employee",
+  "notes": "Reviewed and understood"
+}
+
+###
+
+### --- 2.2 Double-acknowledge (expect 409 or idempotent 200) ---
+POST {{vaultBase}}/documents/{{ackDocId}}/acknowledge
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+Content-Type: application/json
+
+{
+  "signature": "John Employee"
+}
+
+###
+
+### --- 2.3 List acknowledgements for a document (admin) ---
+GET {{vaultBase}}/documents/{{ackDocId}}/acknowledgements
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 2.4 Employee cannot list acks (expect 403) ---
+GET {{vaultBase}}/documents/{{ackDocId}}/acknowledgements
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+
+###
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 3: VIDEOS
+### ═══════════════════════════════════════════════════════════════
+
+### --- 3.1 List videos ---
+GET {{vaultBase}}/videos
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 3.2 Filter by category ---
+GET {{vaultBase}}/videos?category=SAFETY
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 3.3 Filter by status=READY ---
+GET {{vaultBase}}/videos?status=READY
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+
+###
+
+### --- 3.4 Get single video ---
+@videoId = REPLACE_WITH_VIDEO_ID
+
+GET {{vaultBase}}/videos/{{videoId}}
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+
+###
+
+### --- 3.5 Get video progress for current user ---
+GET {{vaultBase}}/videos/{{videoId}}/progress
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+
+###
+
+### --- 3.6 Update video progress ---
+POST {{vaultBase}}/videos/{{videoId}}/progress
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+Content-Type: application/json
+
+{
+  "watchedSeconds": 270,
+  "totalSeconds": 300,
+  "percentage": 90.0,
+  "completed": false,
+  "lastPosition": 270,
+  "sessionData": {
+    "device": "desktop",
+    "userAgent": "Mozilla/5.0 (test)"
+  }
+}
+
+###
+
+### --- 3.7 Mark video as completed (100%) ---
+POST {{vaultBase}}/videos/{{videoId}}/progress
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+Content-Type: application/json
+
+{
+  "watchedSeconds": 300,
+  "totalSeconds": 300,
+  "percentage": 100.0,
+  "completed": true,
+  "lastPosition": 300,
+  "sessionData": {}
+}
+
+###
+
+### --- 3.8 Employee cannot upload video (expect 403) ---
+# Multipart upload — use curl:
+# curl -X POST http://localhost:4001/videos \
+#   -H "Authorization: Bearer <employee_token>" \
+#   -H "x-user-id: seed-emp-001" \
+#   -F "file=@/path/to/video.mp4" \
+#   -F "title=Unauthorized Upload"
+# Expect: 403
+
+### --- 3.9 Manager can upload video ---
+# curl -X POST http://localhost:4001/videos \
+#   -H "Authorization: Bearer <manager_token>" \
+#   -H "x-user-id: seed-mgr-001" \
+#   -F "file=@/path/to/video.mp4" \
+#   -F "title=Manager Upload Test" \
+#   -F "category=TRAINING" \
+#   -F "accessLevel=ALL"
+# Expect: 201
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 4: QUIZZES (Next.js App Routes)
+### ═══════════════════════════════════════════════════════════════
+
+### --- 4.1 Get quiz for a video ---
+# Use the Fire Safety video ID from seed (it has a quiz)
+@quizVideoId = REPLACE_WITH_FIRE_SAFETY_VIDEO_ID
+
+GET {{appBase}}/api/vault/videos/{{quizVideoId}}/quiz
+x-user-id: {{empId}}
+
+###
+
+### --- 4.2 Get quiz for video with no quiz (expect 404) ---
+@noQuizVideoId = REPLACE_WITH_VIDEO_WITHOUT_QUIZ_ID
+
+GET {{appBase}}/api/vault/videos/{{noQuizVideoId}}/quiz
+x-user-id: {{empId}}
+
+###
+
+### --- 4.3 Submit quiz — all correct answers (expect passed: true) ---
+# Replace questionId values with actual IDs from the GET quiz response
+POST {{appBase}}/api/vault/videos/{{quizVideoId}}/quiz/submit
+Content-Type: application/json
+x-user-id: {{empId}}
+
+{
+  "answers": [
+    { "questionId": "REPLACE_Q1_ID", "selectedOption": 0 },
+    { "questionId": "REPLACE_Q2_ID", "selectedOption": 1 },
+    { "questionId": "REPLACE_Q3_ID", "selectedOption": 2 }
+  ]
+}
+
+###
+
+### --- 4.4 Submit quiz — all wrong answers (expect passed: false) ---
+POST {{appBase}}/api/vault/videos/{{quizVideoId}}/quiz/submit
+Content-Type: application/json
+x-user-id: {{empId}}
+
+{
+  "answers": [
+    { "questionId": "REPLACE_Q1_ID", "selectedOption": 3 },
+    { "questionId": "REPLACE_Q2_ID", "selectedOption": 3 },
+    { "questionId": "REPLACE_Q3_ID", "selectedOption": 3 }
+  ]
+}
+
+###
+
+### --- 4.5 Submit quiz — missing answers field (expect 400) ---
+POST {{appBase}}/api/vault/videos/{{quizVideoId}}/quiz/submit
+Content-Type: application/json
+x-user-id: {{empId}}
+
+{}
+
+###
+
+### --- 4.6 Submit quiz — invalid video ID (expect 404) ---
+POST {{appBase}}/api/vault/videos/00000000-0000-0000-0000-000000000000/quiz/submit
+Content-Type: application/json
+x-user-id: {{empId}}
+
+{
+  "answers": []
+}
+
+###
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 5: EXPIRY CRON (manual trigger via vault-server)
+### ═══════════════════════════════════════════════════════════════
+
+### --- 5.1 Trigger expiry job manually (if debug endpoint exists) ---
+# If vault-server exposes a debug route:
+POST {{vaultBase}}/debug/run-expiry-job
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 5.2 Verify warning levels after cron ---
+# Should show HIGH for docs expiring ≤7 days
+GET {{vaultBase}}/documents?warningLevel=high
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 5.3 Verify EXPIRED docs ---
+# Docs past expiresAt should be status=EXPIRED
+GET {{vaultBase}}/documents?status=EXPIRED
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 6: ACCESS CONTROL MATRIX
+### ═══════════════════════════════════════════════════════════════
+
+### --- 6.1 MANAGER_ONLY doc — employee should get 403 ---
+@managerOnlyDocId = REPLACE_WITH_MANAGER_ONLY_DOC_ID
+
+GET {{vaultBase}}/documents/{{managerOnlyDocId}}
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+
+###
+
+### --- 6.2 MANAGER_ONLY doc — manager should get 200 ---
+GET {{vaultBase}}/documents/{{managerOnlyDocId}}
+Authorization: {{managerToken}}
+x-user-id: {{managerId}}
+
+###
+
+### --- 6.3 HR_ONLY doc — manager should get 403 ---
+@hrOnlyDocId = REPLACE_WITH_HR_ONLY_DOC_ID
+
+GET {{vaultBase}}/documents/{{hrOnlyDocId}}
+Authorization: {{managerToken}}
+x-user-id: {{managerId}}
+
+###
+
+### --- 6.4 HR_ONLY doc — admin should get 200 ---
+GET {{vaultBase}}/documents/{{hrOnlyDocId}}
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 6.5 CUSTOM access — allowed staff gets 200 ---
+@customDocId = REPLACE_WITH_CUSTOM_ACCESS_DOC_ID
+@allowedEmpId = seed-emp-001
+
+GET {{vaultBase}}/documents/{{customDocId}}
+Authorization: {{employeeToken}}
+x-user-id: {{allowedEmpId}}
+
+###
+
+### --- 6.6 CUSTOM access — non-allowed staff gets 403 ---
+@disallowedEmpId = seed-emp-005
+
+GET {{vaultBase}}/documents/{{customDocId}}
+Authorization: {{employeeToken}}
+x-user-id: {{disallowedEmpId}}
+
+###
+
+
+### ═══════════════════════════════════════════════════════════════
+### SECTION 7: ERROR / EDGE CASES
+### ═══════════════════════════════════════════════════════════════
+
+### --- 7.1 Non-existent document ID (expect 404) ---
+GET {{vaultBase}}/documents/00000000-0000-0000-0000-000000000000
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 7.2 Invalid UUID format (expect 400) ---
+GET {{vaultBase}}/documents/not-a-uuid
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 7.3 Invalid warningLevel value (expect 400 or empty result) ---
+GET {{vaultBase}}/documents?warningLevel=extreme
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+### --- 7.4 Progress percentage > 100 (expect 400 or clamped) ---
+POST {{vaultBase}}/videos/{{videoId}}/progress
+Authorization: {{employeeToken}}
+x-user-id: {{empId}}
+Content-Type: application/json
+
+{
+  "watchedSeconds": 999,
+  "totalSeconds": 300,
+  "percentage": 150,
+  "completed": true,
+  "lastPosition": 300
+}
+
+###
+
+### --- 7.5 No authorization header (expect 401) ---
+GET {{vaultBase}}/documents
+
+###
+
+### --- 7.6 Search with SQL injection attempt ---
+GET {{vaultBase}}/documents?search=' OR '1'='1
+Authorization: {{adminToken}}
+x-user-id: {{adminId}}
+
+###
+
+
+### ═══════════════════════════════════════════════════════════════
+### QUICK REFERENCE — SEED IDs
+### ═══════════════════════════════════════════════════════════════
+###
+### Staff IDs (from seedModule7.js):
+###   seed-admin-001    — Admin User (HR_ADMIN)
+###   seed-mgr-001      — Sarah Manager (MANAGER)
+###   seed-mgr-002      — David Manager (MANAGER)
+###   seed-emp-001      — John Employee (EMPLOYEE)
+###   seed-emp-002      — Jane Employee (EMPLOYEE)
+###   seed-emp-003      — Mike Employee (EMPLOYEE)
+###   seed-emp-004      — Lisa Employee (EMPLOYEE)
+###   seed-emp-005      — Tom Employee (EMPLOYEE)
+###
+### To find seeded document/video IDs run:
+###   psql $DATABASE_URL -c "SELECT id, title, \"warningLevel\", status FROM \"HrDocument\" WHERE \"uploadedBy\" = 'seed-script';"
+###   psql $DATABASE_URL -c "SELECT id, title, status, category FROM \"HrVideo\" WHERE \"uploadedBy\" = 'seed-script';"
+###
+### Or run: node scripts/seedModule7.js --verify
