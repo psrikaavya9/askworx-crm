@@ -1,3 +1,3 @@
 export default function Page() {
-  return <h1>Dashboard Root</h1>;
+  return <h1>App Working ✅</h1>;
 }
