@@ -320,7 +320,7 @@ export type HrDocumentGroupByOutputType = {
   _max: HrDocumentMaxAggregateOutputType | null
 }
 
-type GetHrDocumentGroupByPayload<T extends HrDocumentGroupByArgs> = Prisma.PrismaPromise<
+export type GetHrDocumentGroupByPayload<T extends HrDocumentGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<HrDocumentGroupByOutputType, T['by']> &
       {
@@ -2445,6 +2445,11 @@ export type HrDocumentFindManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Skip the first `n` HrDocuments.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of HrDocuments.
+   */
   distinct?: Prisma.HrDocumentScalarFieldEnum | Prisma.HrDocumentScalarFieldEnum[]
 }
 

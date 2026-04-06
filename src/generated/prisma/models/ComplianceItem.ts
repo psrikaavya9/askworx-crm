@@ -200,7 +200,7 @@ export type ComplianceItemGroupByOutputType = {
   _max: ComplianceItemMaxAggregateOutputType | null
 }
 
-type GetComplianceItemGroupByPayload<T extends ComplianceItemGroupByArgs> = Prisma.PrismaPromise<
+export type GetComplianceItemGroupByPayload<T extends ComplianceItemGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<ComplianceItemGroupByOutputType, T['by']> &
       {
@@ -1344,6 +1344,11 @@ export type ComplianceItemFindManyArgs<ExtArgs extends runtime.Types.Extensions.
    * Skip the first `n` ComplianceItems.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of ComplianceItems.
+   */
   distinct?: Prisma.ComplianceItemScalarFieldEnum | Prisma.ComplianceItemScalarFieldEnum[]
 }
 

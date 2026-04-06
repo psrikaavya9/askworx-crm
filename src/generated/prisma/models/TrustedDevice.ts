@@ -165,7 +165,7 @@ export type TrustedDeviceGroupByOutputType = {
   _max: TrustedDeviceMaxAggregateOutputType | null
 }
 
-type GetTrustedDeviceGroupByPayload<T extends TrustedDeviceGroupByArgs> = Prisma.PrismaPromise<
+export type GetTrustedDeviceGroupByPayload<T extends TrustedDeviceGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TrustedDeviceGroupByOutputType, T['by']> &
       {
@@ -1163,6 +1163,11 @@ export type TrustedDeviceFindManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Skip the first `n` TrustedDevices.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TrustedDevices.
+   */
   distinct?: Prisma.TrustedDeviceScalarFieldEnum | Prisma.TrustedDeviceScalarFieldEnum[]
 }
 

@@ -172,7 +172,7 @@ export type LeadPipelineGroupByOutputType = {
   _max: LeadPipelineMaxAggregateOutputType | null
 }
 
-type GetLeadPipelineGroupByPayload<T extends LeadPipelineGroupByArgs> = Prisma.PrismaPromise<
+export type GetLeadPipelineGroupByPayload<T extends LeadPipelineGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<LeadPipelineGroupByOutputType, T['by']> &
       {
@@ -1552,6 +1552,11 @@ export type LeadPipelineFindManyArgs<ExtArgs extends runtime.Types.Extensions.In
    * Skip the first `n` LeadPipelines.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of LeadPipelines.
+   */
   distinct?: Prisma.LeadPipelineScalarFieldEnum | Prisma.LeadPipelineScalarFieldEnum[]
 }
 

@@ -220,7 +220,7 @@ export type PreApprovalGroupByOutputType = {
   _max: PreApprovalMaxAggregateOutputType | null
 }
 
-type GetPreApprovalGroupByPayload<T extends PreApprovalGroupByArgs> = Prisma.PrismaPromise<
+export type GetPreApprovalGroupByPayload<T extends PreApprovalGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PreApprovalGroupByOutputType, T['by']> &
       {
@@ -1310,6 +1310,11 @@ export type PreApprovalFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Skip the first `n` PreApprovals.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of PreApprovals.
+   */
   distinct?: Prisma.PreApprovalScalarFieldEnum | Prisma.PreApprovalScalarFieldEnum[]
 }
 

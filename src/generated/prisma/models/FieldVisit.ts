@@ -265,7 +265,7 @@ export type FieldVisitGroupByOutputType = {
   _max: FieldVisitMaxAggregateOutputType | null
 }
 
-type GetFieldVisitGroupByPayload<T extends FieldVisitGroupByArgs> = Prisma.PrismaPromise<
+export type GetFieldVisitGroupByPayload<T extends FieldVisitGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<FieldVisitGroupByOutputType, T['by']> &
       {
@@ -1549,6 +1549,11 @@ export type FieldVisitFindManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Skip the first `n` FieldVisits.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of FieldVisits.
+   */
   distinct?: Prisma.FieldVisitScalarFieldEnum | Prisma.FieldVisitScalarFieldEnum[]
 }
 

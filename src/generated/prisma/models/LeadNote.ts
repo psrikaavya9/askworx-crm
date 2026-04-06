@@ -165,7 +165,7 @@ export type LeadNoteGroupByOutputType = {
   _max: LeadNoteMaxAggregateOutputType | null
 }
 
-type GetLeadNoteGroupByPayload<T extends LeadNoteGroupByArgs> = Prisma.PrismaPromise<
+export type GetLeadNoteGroupByPayload<T extends LeadNoteGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<LeadNoteGroupByOutputType, T['by']> &
       {
@@ -1157,6 +1157,11 @@ export type LeadNoteFindManyArgs<ExtArgs extends runtime.Types.Extensions.Intern
    * Skip the first `n` LeadNotes.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of LeadNotes.
+   */
   distinct?: Prisma.LeadNoteScalarFieldEnum | Prisma.LeadNoteScalarFieldEnum[]
 }
 

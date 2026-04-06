@@ -322,7 +322,7 @@ export type CustomerInteractionGroupByOutputType = {
   _max: CustomerInteractionMaxAggregateOutputType | null
 }
 
-type GetCustomerInteractionGroupByPayload<T extends CustomerInteractionGroupByArgs> = Prisma.PrismaPromise<
+export type GetCustomerInteractionGroupByPayload<T extends CustomerInteractionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<CustomerInteractionGroupByOutputType, T['by']> &
       {
@@ -2038,6 +2038,11 @@ export type CustomerInteractionFindManyArgs<ExtArgs extends runtime.Types.Extens
    * Skip the first `n` CustomerInteractions.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of CustomerInteractions.
+   */
   distinct?: Prisma.CustomerInteractionScalarFieldEnum | Prisma.CustomerInteractionScalarFieldEnum[]
 }
 

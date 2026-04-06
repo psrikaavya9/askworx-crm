@@ -172,7 +172,7 @@ export type PipelineTemplateGroupByOutputType = {
   _max: PipelineTemplateMaxAggregateOutputType | null
 }
 
-type GetPipelineTemplateGroupByPayload<T extends PipelineTemplateGroupByArgs> = Prisma.PrismaPromise<
+export type GetPipelineTemplateGroupByPayload<T extends PipelineTemplateGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PipelineTemplateGroupByOutputType, T['by']> &
       {
@@ -1250,6 +1250,11 @@ export type PipelineTemplateFindManyArgs<ExtArgs extends runtime.Types.Extension
    * Skip the first `n` PipelineTemplates.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of PipelineTemplates.
+   */
   distinct?: Prisma.PipelineTemplateScalarFieldEnum | Prisma.PipelineTemplateScalarFieldEnum[]
 }
 

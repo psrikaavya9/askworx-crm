@@ -168,7 +168,7 @@ export type LeadCaptureSubmissionGroupByOutputType = {
   _max: LeadCaptureSubmissionMaxAggregateOutputType | null
 }
 
-type GetLeadCaptureSubmissionGroupByPayload<T extends LeadCaptureSubmissionGroupByArgs> = Prisma.PrismaPromise<
+export type GetLeadCaptureSubmissionGroupByPayload<T extends LeadCaptureSubmissionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<LeadCaptureSubmissionGroupByOutputType, T['by']> &
       {
@@ -1186,6 +1186,11 @@ export type LeadCaptureSubmissionFindManyArgs<ExtArgs extends runtime.Types.Exte
    * Skip the first `n` LeadCaptureSubmissions.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of LeadCaptureSubmissions.
+   */
   distinct?: Prisma.LeadCaptureSubmissionScalarFieldEnum | Prisma.LeadCaptureSubmissionScalarFieldEnum[]
 }
 

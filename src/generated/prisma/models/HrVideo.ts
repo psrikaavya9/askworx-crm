@@ -299,7 +299,7 @@ export type HrVideoGroupByOutputType = {
   _max: HrVideoMaxAggregateOutputType | null
 }
 
-type GetHrVideoGroupByPayload<T extends HrVideoGroupByArgs> = Prisma.PrismaPromise<
+export type GetHrVideoGroupByPayload<T extends HrVideoGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<HrVideoGroupByOutputType, T['by']> &
       {
@@ -1709,6 +1709,11 @@ export type HrVideoFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` HrVideos.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of HrVideos.
+   */
   distinct?: Prisma.HrVideoScalarFieldEnum | Prisma.HrVideoScalarFieldEnum[]
 }
 

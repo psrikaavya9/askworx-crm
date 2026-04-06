@@ -151,7 +151,7 @@ export type PasswordHistoryGroupByOutputType = {
   _max: PasswordHistoryMaxAggregateOutputType | null
 }
 
-type GetPasswordHistoryGroupByPayload<T extends PasswordHistoryGroupByArgs> = Prisma.PrismaPromise<
+export type GetPasswordHistoryGroupByPayload<T extends PasswordHistoryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<PasswordHistoryGroupByOutputType, T['by']> &
       {
@@ -1087,6 +1087,11 @@ export type PasswordHistoryFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Skip the first `n` PasswordHistories.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of PasswordHistories.
+   */
   distinct?: Prisma.PasswordHistoryScalarFieldEnum | Prisma.PasswordHistoryScalarFieldEnum[]
 }
 

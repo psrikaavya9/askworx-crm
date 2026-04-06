@@ -210,7 +210,7 @@ export type LeadCaptureFormGroupByOutputType = {
   _max: LeadCaptureFormMaxAggregateOutputType | null
 }
 
-type GetLeadCaptureFormGroupByPayload<T extends LeadCaptureFormGroupByArgs> = Prisma.PrismaPromise<
+export type GetLeadCaptureFormGroupByPayload<T extends LeadCaptureFormGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<LeadCaptureFormGroupByOutputType, T['by']> &
       {
@@ -1338,6 +1338,11 @@ export type LeadCaptureFormFindManyArgs<ExtArgs extends runtime.Types.Extensions
    * Skip the first `n` LeadCaptureForms.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of LeadCaptureForms.
+   */
   distinct?: Prisma.LeadCaptureFormScalarFieldEnum | Prisma.LeadCaptureFormScalarFieldEnum[]
 }
 

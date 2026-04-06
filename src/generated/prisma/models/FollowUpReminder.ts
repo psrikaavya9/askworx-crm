@@ -207,7 +207,7 @@ export type FollowUpReminderGroupByOutputType = {
   _max: FollowUpReminderMaxAggregateOutputType | null
 }
 
-type GetFollowUpReminderGroupByPayload<T extends FollowUpReminderGroupByArgs> = Prisma.PrismaPromise<
+export type GetFollowUpReminderGroupByPayload<T extends FollowUpReminderGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<FollowUpReminderGroupByOutputType, T['by']> &
       {
@@ -1375,6 +1375,11 @@ export type FollowUpReminderFindManyArgs<ExtArgs extends runtime.Types.Extension
    * Skip the first `n` FollowUpReminders.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of FollowUpReminders.
+   */
   distinct?: Prisma.FollowUpReminderScalarFieldEnum | Prisma.FollowUpReminderScalarFieldEnum[]
 }
 

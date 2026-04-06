@@ -192,7 +192,7 @@ export type TimeLogGroupByOutputType = {
   _max: TimeLogMaxAggregateOutputType | null
 }
 
-type GetTimeLogGroupByPayload<T extends TimeLogGroupByArgs> = Prisma.PrismaPromise<
+export type GetTimeLogGroupByPayload<T extends TimeLogGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<TimeLogGroupByOutputType, T['by']> &
       {
@@ -1166,6 +1166,11 @@ export type TimeLogFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` TimeLogs.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of TimeLogs.
+   */
   distinct?: Prisma.TimeLogScalarFieldEnum | Prisma.TimeLogScalarFieldEnum[]
 }
 

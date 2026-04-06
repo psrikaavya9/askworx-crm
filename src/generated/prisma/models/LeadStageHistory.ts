@@ -172,7 +172,7 @@ export type LeadStageHistoryGroupByOutputType = {
   _max: LeadStageHistoryMaxAggregateOutputType | null
 }
 
-type GetLeadStageHistoryGroupByPayload<T extends LeadStageHistoryGroupByArgs> = Prisma.PrismaPromise<
+export type GetLeadStageHistoryGroupByPayload<T extends LeadStageHistoryGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<LeadStageHistoryGroupByOutputType, T['by']> &
       {
@@ -1456,6 +1456,11 @@ export type LeadStageHistoryFindManyArgs<ExtArgs extends runtime.Types.Extension
    * Skip the first `n` LeadStageHistories.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of LeadStageHistories.
+   */
   distinct?: Prisma.LeadStageHistoryScalarFieldEnum | Prisma.LeadStageHistoryScalarFieldEnum[]
 }
 

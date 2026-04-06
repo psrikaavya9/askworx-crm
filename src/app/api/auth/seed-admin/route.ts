@@ -4,30 +4,91 @@ import { prisma } from "@/lib/prisma";
 
 // ---------------------------------------------------------------------------
 // POST /api/auth/seed-admin
+// GET  /api/auth/seed-admin?secret=<SEED_SECRET>
 //
-// DEV ONLY — creates or updates a staff member's password.
-// Disabled in production.
+// Creates or updates the admin staff account.
+// In production, requires ?secret=SEED_SECRET env var as a guard.
 //
-// Body: { email, password, firstName?, lastName?, role? }
+// Body (POST): { email, password, firstName?, lastName?, role? }
+// Query (GET): uses defaults — admin@askworx.com / admin123456
 // ---------------------------------------------------------------------------
 
-export async function POST(req: NextRequest) {
+async function seedAdmin(opts: {
+  email:      string;
+  password:   string;
+  firstName?: string;
+  lastName?:  string;
+  role?:      "ADMIN" | "MANAGER" | "STAFF";
+}) {
+  const passwordHash = await bcrypt.hash(opts.password, 12);
+
+  const staff = await prisma.staff.upsert({
+    where: { email: opts.email.toLowerCase().trim() },
+    update: { passwordHash },
+    create: {
+      email:        opts.email.toLowerCase().trim(),
+      firstName:    opts.firstName ?? "Admin",
+      lastName:     opts.lastName  ?? "User",
+      role:         opts.role      ?? "ADMIN",
+      status:       "ACTIVE",
+      passwordHash,
+    },
+    select: { id: true, email: true, firstName: true, lastName: true, role: true },
+  });
+
+  return staff;
+}
+
+export async function GET(req: NextRequest) {
+  // Production guard — require ?secret= matching SEED_SECRET env var
   if (process.env.NODE_ENV === "production") {
-    return NextResponse.json(
-      { success: false, error: "Not available in production" },
-      { status: 403 }
-    );
+    const secret = req.nextUrl.searchParams.get("secret");
+    if (!secret || secret !== process.env.SEED_SECRET) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden" },
+        { status: 403 }
+      );
+    }
   }
 
-  const body = await req.json() as {
-    email:      string;
-    password:   string;
-    firstName?: string;
-    lastName?:  string;
-    role?:      "ADMIN" | "MANAGER" | "STAFF";
-  };
+  try {
+    const staff = await seedAdmin({
+      email:    "admin@askworx.com",
+      password: "admin123456",
+    });
 
-  if (!body.email || !body.password) {
+    return NextResponse.json({
+      success: true,
+      message: "Admin seeded. Email: admin@askworx.com / Password: admin123456",
+      data:    staff,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[seed-admin] Error:", message);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  // Production guard — require ?secret= matching SEED_SECRET env var
+  if (process.env.NODE_ENV === "production") {
+    const secret = req.nextUrl.searchParams.get("secret");
+    if (!secret || secret !== process.env.SEED_SECRET) {
+      return NextResponse.json(
+        { success: false, error: "Not available in production without SEED_SECRET" },
+        { status: 403 }
+      );
+    }
+  }
+
+  let body: { email?: unknown; password?: unknown; firstName?: unknown; lastName?: unknown; role?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  if (typeof body.email !== "string" || typeof body.password !== "string") {
     return NextResponse.json(
       { success: false, error: "email and password are required" },
       { status: 400 }
@@ -41,26 +102,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const passwordHash = await bcrypt.hash(body.password, 12);
+  try {
+    const staff = await seedAdmin({
+      email:     body.email,
+      password:  body.password,
+      firstName: typeof body.firstName === "string" ? body.firstName : undefined,
+      lastName:  typeof body.lastName  === "string" ? body.lastName  : undefined,
+      role:      (body.role as "ADMIN" | "MANAGER" | "STAFF") ?? undefined,
+    });
 
-  // Upsert — create if not exists, update password if exists
-  const staff = await prisma.staff.upsert({
-    where: { email: body.email.toLowerCase().trim() },
-    update: { passwordHash },
-    create: {
-      email:        body.email.toLowerCase().trim(),
-      firstName:    body.firstName ?? "Admin",
-      lastName:     body.lastName  ?? "User",
-      role:         body.role      ?? "ADMIN",
-      status:       "ACTIVE",
-      passwordHash,
-    },
-    select: { id: true, email: true, firstName: true, lastName: true, role: true },
-  });
-
-  return NextResponse.json({
-    success: true,
-    message: "Staff member created/updated with password",
-    data:    staff,
-  });
+    return NextResponse.json({
+      success: true,
+      message: "Staff member created/updated with password",
+      data:    staff,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[seed-admin] Error:", message);
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
+  }
 }

@@ -200,7 +200,7 @@ export type DocAcknowledgementGroupByOutputType = {
   _max: DocAcknowledgementMaxAggregateOutputType | null
 }
 
-type GetDocAcknowledgementGroupByPayload<T extends DocAcknowledgementGroupByArgs> = Prisma.PrismaPromise<
+export type GetDocAcknowledgementGroupByPayload<T extends DocAcknowledgementGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<DocAcknowledgementGroupByOutputType, T['by']> &
       {
@@ -1338,6 +1338,11 @@ export type DocAcknowledgementFindManyArgs<ExtArgs extends runtime.Types.Extensi
    * Skip the first `n` DocAcknowledgements.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of DocAcknowledgements.
+   */
   distinct?: Prisma.DocAcknowledgementScalarFieldEnum | Prisma.DocAcknowledgementScalarFieldEnum[]
 }
 

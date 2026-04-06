@@ -249,7 +249,7 @@ export type VideoWatchLogGroupByOutputType = {
   _max: VideoWatchLogMaxAggregateOutputType | null
 }
 
-type GetVideoWatchLogGroupByPayload<T extends VideoWatchLogGroupByArgs> = Prisma.PrismaPromise<
+export type GetVideoWatchLogGroupByPayload<T extends VideoWatchLogGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<VideoWatchLogGroupByOutputType, T['by']> &
       {
@@ -1429,6 +1429,11 @@ export type VideoWatchLogFindManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Skip the first `n` VideoWatchLogs.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of VideoWatchLogs.
+   */
   distinct?: Prisma.VideoWatchLogScalarFieldEnum | Prisma.VideoWatchLogScalarFieldEnum[]
 }
 

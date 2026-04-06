@@ -206,7 +206,7 @@ export type VideoQuizQuestionGroupByOutputType = {
   _max: VideoQuizQuestionMaxAggregateOutputType | null
 }
 
-type GetVideoQuizQuestionGroupByPayload<T extends VideoQuizQuestionGroupByArgs> = Prisma.PrismaPromise<
+export type GetVideoQuizQuestionGroupByPayload<T extends VideoQuizQuestionGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<VideoQuizQuestionGroupByOutputType, T['by']> &
       {
@@ -1236,6 +1236,11 @@ export type VideoQuizQuestionFindManyArgs<ExtArgs extends runtime.Types.Extensio
    * Skip the first `n` VideoQuizQuestions.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of VideoQuizQuestions.
+   */
   distinct?: Prisma.VideoQuizQuestionScalarFieldEnum | Prisma.VideoQuizQuestionScalarFieldEnum[]
 }
 

@@ -213,7 +213,7 @@ export type OtpCodeGroupByOutputType = {
   _max: OtpCodeMaxAggregateOutputType | null
 }
 
-type GetOtpCodeGroupByPayload<T extends OtpCodeGroupByArgs> = Prisma.PrismaPromise<
+export type GetOtpCodeGroupByPayload<T extends OtpCodeGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<OtpCodeGroupByOutputType, T['by']> &
       {
@@ -1275,6 +1275,11 @@ export type OtpCodeFindManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Skip the first `n` OtpCodes.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of OtpCodes.
+   */
   distinct?: Prisma.OtpCodeScalarFieldEnum | Prisma.OtpCodeScalarFieldEnum[]
 }
 

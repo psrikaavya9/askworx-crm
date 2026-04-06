@@ -240,7 +240,7 @@ export type CustomerHealthScoreGroupByOutputType = {
   _max: CustomerHealthScoreMaxAggregateOutputType | null
 }
 
-type GetCustomerHealthScoreGroupByPayload<T extends CustomerHealthScoreGroupByArgs> = Prisma.PrismaPromise<
+export type GetCustomerHealthScoreGroupByPayload<T extends CustomerHealthScoreGroupByArgs> = Prisma.PrismaPromise<
   Array<
     Prisma.PickEnumerable<CustomerHealthScoreGroupByOutputType, T['by']> &
       {
@@ -1336,6 +1336,11 @@ export type CustomerHealthScoreFindManyArgs<ExtArgs extends runtime.Types.Extens
    * Skip the first `n` CustomerHealthScores.
    */
   skip?: number
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+   * 
+   * Filter by unique combinations of CustomerHealthScores.
+   */
   distinct?: Prisma.CustomerHealthScoreScalarFieldEnum | Prisma.CustomerHealthScoreScalarFieldEnum[]
 }
 
