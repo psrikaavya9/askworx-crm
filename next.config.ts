@@ -6,7 +6,7 @@ const nextConfig = {
     serverActions: {}
   },
 
-  output: "standalone",
+  
 
   eslint: {
     ignoreDuringBuilds: true
