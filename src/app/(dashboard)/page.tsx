@@ -1,3 +1,5 @@
-export default function Page() {
-  return <h1>App Working ✅</h1>;
+import { redirect } from "next/navigation";
+
+export default function DashboardRootPage() {
+  redirect("/dashboard");
 }
