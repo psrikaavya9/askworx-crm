@@ -6,8 +6,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint",
-    "postinstall": "npm install --legacy-peer-deps"
+    "lint": "eslint"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -34,7 +33,6 @@
     "react-dom": "19.2.3",
     "react-leaflet": "^5.0.0",
     "react-player": "^3.4.0",
-    "react-qr-reader": "^3.0.0-beta-1",
     "react-signature-canvas": "^1.1.0-alpha.2",
     "react-webcam": "^7.2.0",
     "recharts": "^3.8.0",
