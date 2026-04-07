@@ -157,7 +157,7 @@ export async function listVideos(
   const limit  = Math.min(100, Math.max(1, input.limit ?? 20));
   const offset = (page - 1) * limit;
 
-  const conditions: string[] = [`"isDeleted" = false`];
+  const conditions: string[] = [`"isDeleted" = false`, `status = 'READY'`];
   const params: unknown[] = [];
   let   p = 1;
 
