@@ -353,6 +353,18 @@ async function persist(
 // Public API
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Full output type (includes component breakdown)
+// ---------------------------------------------------------------------------
+
+export interface HealthScoreFullOutput extends HealthScoreOutput {
+  paymentScore:     number;
+  engagementScore:  number;
+  interactionScore: number;
+  complaintScore:   number;
+  revenueScore:     number;
+}
+
 /**
  * Calculates the Customer Health Score from live database data.
  *
@@ -361,11 +373,6 @@ async function persist(
  *
  * @param clientId  Prisma `Client.id`
  * @returns         `{ score, status }` — score is 0–100, status is the tier label
- *
- * @example
- *   const { score, status } = await calculateHealthScore(client.id)
- *   // score  → 74
- *   // status → "Stable"
  */
 export async function calculateHealthScore(
   clientId: string,
@@ -378,6 +385,32 @@ export async function calculateHealthScore(
   );
 
   return { score, status };
+}
+
+/**
+ * Same as calculateHealthScore but awaits persistence and returns the full
+ * per-component breakdown. Use this where the breakdown is needed immediately
+ * (e.g., server-side page render with inline calculation for new clients).
+ */
+export async function calculateHealthScoreFull(
+  clientId: string,
+): Promise<HealthScoreFullOutput> {
+  const { score, status, components } = await compute(clientId);
+
+  // Await persistence so the row is readable on the next DB query
+  await persist(clientId, score, components).catch((err) =>
+    console.error(`[healthScore] persist failed for ${clientId}:`, err),
+  );
+
+  return {
+    score,
+    status,
+    paymentScore:     components.payment,
+    engagementScore:  components.engagement,
+    interactionScore: components.interaction,
+    complaintScore:   components.complaint,
+    revenueScore:     components.revenue,
+  };
 }
 
 /**

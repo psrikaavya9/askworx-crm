@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { serializePrisma } from "@/lib/serialize";
 import { CustomersTable, type CustomerRow, type CustomerHealthData } from "@/components/customer/CustomersTable";
 import { UserCircle2, AlertTriangle } from "lucide-react";
+import { calculateHealthScoreFull } from "@/lib/services/healthScore";
 
 // ---------------------------------------------------------------------------
 // Page
@@ -78,6 +79,25 @@ export default async function CustomersPage({ searchParams }: PageProps) {
       interactionScore: s.interactionScore,
       complaintScore:   s.complaintScore,
       revenueScore:     s.revenueScore,
+    });
+  }
+
+  // ── Auto-calculate health for clients with no persisted score ───────────
+  // Runs server-side in parallel; awaits persistence so scores are in healthMap.
+  const missingIds = rawCustomers
+    .filter((c) => !healthMap.has(c.id))
+    .map((c) => c.id);
+
+  if (missingIds.length > 0) {
+    const results = await Promise.allSettled(
+      missingIds.map((id) => calculateHealthScoreFull(id)),
+    );
+    missingIds.forEach((id, i) => {
+      const r = results[i];
+      if (r.status === "fulfilled") {
+        const { score, status, paymentScore, engagementScore, interactionScore, complaintScore, revenueScore } = r.value;
+        healthMap.set(id, { score, status, paymentScore, engagementScore, interactionScore, complaintScore, revenueScore });
+      }
     });
   }
 
