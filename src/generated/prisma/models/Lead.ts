@@ -46,6 +46,7 @@ export type LeadMinAggregateOutputType = {
   sourceDetail: string | null
   stage: $Enums.PipelineStage | null
   priority: $Enums.LeadPriority | null
+  dealType: string | null
   dealValue: runtime.Decimal | null
   currency: string | null
   assignedTo: string | null
@@ -78,6 +79,7 @@ export type LeadMaxAggregateOutputType = {
   sourceDetail: string | null
   stage: $Enums.PipelineStage | null
   priority: $Enums.LeadPriority | null
+  dealType: string | null
   dealValue: runtime.Decimal | null
   currency: string | null
   assignedTo: string | null
@@ -110,6 +112,7 @@ export type LeadCountAggregateOutputType = {
   sourceDetail: number
   stage: number
   priority: number
+  dealType: number
   dealValue: number
   currency: number
   assignedTo: number
@@ -153,6 +156,7 @@ export type LeadMinAggregateInputType = {
   sourceDetail?: true
   stage?: true
   priority?: true
+  dealType?: true
   dealValue?: true
   currency?: true
   assignedTo?: true
@@ -185,6 +189,7 @@ export type LeadMaxAggregateInputType = {
   sourceDetail?: true
   stage?: true
   priority?: true
+  dealType?: true
   dealValue?: true
   currency?: true
   assignedTo?: true
@@ -217,6 +222,7 @@ export type LeadCountAggregateInputType = {
   sourceDetail?: true
   stage?: true
   priority?: true
+  dealType?: true
   dealValue?: true
   currency?: true
   assignedTo?: true
@@ -337,6 +343,7 @@ export type LeadGroupByOutputType = {
   sourceDetail: string | null
   stage: $Enums.PipelineStage
   priority: $Enums.LeadPriority
+  dealType: string | null
   dealValue: runtime.Decimal | null
   currency: string
   assignedTo: string | null
@@ -393,6 +400,7 @@ export type LeadWhereInput = {
   sourceDetail?: Prisma.StringNullableFilter<"Lead"> | string | null
   stage?: Prisma.EnumPipelineStageFilter<"Lead"> | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFilter<"Lead"> | $Enums.LeadPriority
+  dealType?: Prisma.StringNullableFilter<"Lead"> | string | null
   dealValue?: Prisma.DecimalNullableFilter<"Lead"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFilter<"Lead"> | string
   assignedTo?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -432,6 +440,7 @@ export type LeadOrderByWithRelationInput = {
   sourceDetail?: Prisma.SortOrderInput | Prisma.SortOrder
   stage?: Prisma.SortOrder
   priority?: Prisma.SortOrder
+  dealType?: Prisma.SortOrderInput | Prisma.SortOrder
   dealValue?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   assignedTo?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -474,6 +483,7 @@ export type LeadWhereUniqueInput = Prisma.AtLeast<{
   sourceDetail?: Prisma.StringNullableFilter<"Lead"> | string | null
   stage?: Prisma.EnumPipelineStageFilter<"Lead"> | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFilter<"Lead"> | $Enums.LeadPriority
+  dealType?: Prisma.StringNullableFilter<"Lead"> | string | null
   dealValue?: Prisma.DecimalNullableFilter<"Lead"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFilter<"Lead"> | string
   assignedTo?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -513,6 +523,7 @@ export type LeadOrderByWithAggregationInput = {
   sourceDetail?: Prisma.SortOrderInput | Prisma.SortOrder
   stage?: Prisma.SortOrder
   priority?: Prisma.SortOrder
+  dealType?: Prisma.SortOrderInput | Prisma.SortOrder
   dealValue?: Prisma.SortOrderInput | Prisma.SortOrder
   currency?: Prisma.SortOrder
   assignedTo?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -554,6 +565,7 @@ export type LeadScalarWhereWithAggregatesInput = {
   sourceDetail?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   stage?: Prisma.EnumPipelineStageWithAggregatesFilter<"Lead"> | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityWithAggregatesFilter<"Lead"> | $Enums.LeadPriority
+  dealType?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
   dealValue?: Prisma.DecimalNullableWithAggregatesFilter<"Lead"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringWithAggregatesFilter<"Lead"> | string
   assignedTo?: Prisma.StringNullableWithAggregatesFilter<"Lead"> | string | null
@@ -587,6 +599,7 @@ export type LeadCreateInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -625,6 +638,7 @@ export type LeadUncheckedCreateInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -663,6 +677,7 @@ export type LeadUpdateInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -701,6 +716,7 @@ export type LeadUncheckedUpdateInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -739,6 +755,7 @@ export type LeadCreateManyInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -772,6 +789,7 @@ export type LeadUpdateManyMutationInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -804,6 +822,7 @@ export type LeadUncheckedUpdateManyInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -845,6 +864,7 @@ export type LeadCountOrderByAggregateInput = {
   sourceDetail?: Prisma.SortOrder
   stage?: Prisma.SortOrder
   priority?: Prisma.SortOrder
+  dealType?: Prisma.SortOrder
   dealValue?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   assignedTo?: Prisma.SortOrder
@@ -882,6 +902,7 @@ export type LeadMaxOrderByAggregateInput = {
   sourceDetail?: Prisma.SortOrder
   stage?: Prisma.SortOrder
   priority?: Prisma.SortOrder
+  dealType?: Prisma.SortOrder
   dealValue?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   assignedTo?: Prisma.SortOrder
@@ -914,6 +935,7 @@ export type LeadMinOrderByAggregateInput = {
   sourceDetail?: Prisma.SortOrder
   stage?: Prisma.SortOrder
   priority?: Prisma.SortOrder
+  dealType?: Prisma.SortOrder
   dealValue?: Prisma.SortOrder
   currency?: Prisma.SortOrder
   assignedTo?: Prisma.SortOrder
@@ -1130,6 +1152,7 @@ export type LeadCreateWithoutScoreInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1167,6 +1190,7 @@ export type LeadUncheckedCreateWithoutScoreInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1220,6 +1244,7 @@ export type LeadUpdateWithoutScoreInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1257,6 +1282,7 @@ export type LeadUncheckedUpdateWithoutScoreInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1294,6 +1320,7 @@ export type LeadCreateWithoutLeadPipelineInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1331,6 +1358,7 @@ export type LeadUncheckedCreateWithoutLeadPipelineInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1384,6 +1412,7 @@ export type LeadUpdateWithoutLeadPipelineInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1421,6 +1450,7 @@ export type LeadUncheckedUpdateWithoutLeadPipelineInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1458,6 +1488,7 @@ export type LeadCreateWithoutNotesInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1495,6 +1526,7 @@ export type LeadUncheckedCreateWithoutNotesInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1548,6 +1580,7 @@ export type LeadUpdateWithoutNotesInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1585,6 +1618,7 @@ export type LeadUncheckedUpdateWithoutNotesInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1622,6 +1656,7 @@ export type LeadCreateWithoutActivitiesInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1659,6 +1694,7 @@ export type LeadUncheckedCreateWithoutActivitiesInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1712,6 +1748,7 @@ export type LeadUpdateWithoutActivitiesInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1749,6 +1786,7 @@ export type LeadUncheckedUpdateWithoutActivitiesInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1786,6 +1824,7 @@ export type LeadCreateWithoutRemindersInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1823,6 +1862,7 @@ export type LeadUncheckedCreateWithoutRemindersInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1876,6 +1916,7 @@ export type LeadUpdateWithoutRemindersInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1913,6 +1954,7 @@ export type LeadUncheckedUpdateWithoutRemindersInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1950,6 +1992,7 @@ export type LeadCreateWithoutClientInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -1987,6 +2030,7 @@ export type LeadUncheckedCreateWithoutClientInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -2053,6 +2097,7 @@ export type LeadScalarWhereInput = {
   sourceDetail?: Prisma.StringNullableFilter<"Lead"> | string | null
   stage?: Prisma.EnumPipelineStageFilter<"Lead"> | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFilter<"Lead"> | $Enums.LeadPriority
+  dealType?: Prisma.StringNullableFilter<"Lead"> | string | null
   dealValue?: Prisma.DecimalNullableFilter<"Lead"> | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFilter<"Lead"> | string
   assignedTo?: Prisma.StringNullableFilter<"Lead"> | string | null
@@ -2086,6 +2131,7 @@ export type LeadCreateManyClientInput = {
   sourceDetail?: string | null
   stage?: $Enums.PipelineStage
   priority?: $Enums.LeadPriority
+  dealType?: string | null
   dealValue?: runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: string
   assignedTo?: string | null
@@ -2118,6 +2164,7 @@ export type LeadUpdateWithoutClientInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2155,6 +2202,7 @@ export type LeadUncheckedUpdateWithoutClientInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2192,6 +2240,7 @@ export type LeadUncheckedUpdateManyWithoutClientInput = {
   sourceDetail?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   stage?: Prisma.EnumPipelineStageFieldUpdateOperationsInput | $Enums.PipelineStage
   priority?: Prisma.EnumLeadPriorityFieldUpdateOperationsInput | $Enums.LeadPriority
+  dealType?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   dealValue?: Prisma.NullableDecimalFieldUpdateOperationsInput | runtime.Decimal | runtime.DecimalJsLike | number | string | null
   currency?: Prisma.StringFieldUpdateOperationsInput | string
   assignedTo?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2273,6 +2322,7 @@ export type LeadSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   sourceDetail?: boolean
   stage?: boolean
   priority?: boolean
+  dealType?: boolean
   dealValue?: boolean
   currency?: boolean
   assignedTo?: boolean
@@ -2313,6 +2363,7 @@ export type LeadSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   sourceDetail?: boolean
   stage?: boolean
   priority?: boolean
+  dealType?: boolean
   dealValue?: boolean
   currency?: boolean
   assignedTo?: boolean
@@ -2347,6 +2398,7 @@ export type LeadSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   sourceDetail?: boolean
   stage?: boolean
   priority?: boolean
+  dealType?: boolean
   dealValue?: boolean
   currency?: boolean
   assignedTo?: boolean
@@ -2381,6 +2433,7 @@ export type LeadSelectScalar = {
   sourceDetail?: boolean
   stage?: boolean
   priority?: boolean
+  dealType?: boolean
   dealValue?: boolean
   currency?: boolean
   assignedTo?: boolean
@@ -2402,7 +2455,7 @@ export type LeadSelectScalar = {
   lostReason?: boolean
 }
 
-export type LeadOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "phone" | "company" | "jobTitle" | "source" | "sourceDetail" | "stage" | "priority" | "dealValue" | "currency" | "assignedTo" | "assignedAt" | "tags" | "companySize" | "industry" | "clientId" | "lastActivityAt" | "isCold" | "createdAt" | "updatedAt" | "contactedAt" | "qualifiedAt" | "proposalAt" | "convertedAt" | "winReason" | "lostAt" | "lostReason", ExtArgs["result"]["lead"]>
+export type LeadOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "firstName" | "lastName" | "email" | "phone" | "company" | "jobTitle" | "source" | "sourceDetail" | "stage" | "priority" | "dealType" | "dealValue" | "currency" | "assignedTo" | "assignedAt" | "tags" | "companySize" | "industry" | "clientId" | "lastActivityAt" | "isCold" | "createdAt" | "updatedAt" | "contactedAt" | "qualifiedAt" | "proposalAt" | "convertedAt" | "winReason" | "lostAt" | "lostReason", ExtArgs["result"]["lead"]>
 export type LeadInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   notes?: boolean | Prisma.Lead$notesArgs<ExtArgs>
   activities?: boolean | Prisma.Lead$activitiesArgs<ExtArgs>
@@ -2441,6 +2494,7 @@ export type $LeadPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     sourceDetail: string | null
     stage: $Enums.PipelineStage
     priority: $Enums.LeadPriority
+    dealType: string | null
     dealValue: runtime.Decimal | null
     currency: string
     assignedTo: string | null
@@ -2900,6 +2954,7 @@ export interface LeadFieldRefs {
   readonly sourceDetail: Prisma.FieldRef<"Lead", 'String'>
   readonly stage: Prisma.FieldRef<"Lead", 'PipelineStage'>
   readonly priority: Prisma.FieldRef<"Lead", 'LeadPriority'>
+  readonly dealType: Prisma.FieldRef<"Lead", 'String'>
   readonly dealValue: Prisma.FieldRef<"Lead", 'Decimal'>
   readonly currency: Prisma.FieldRef<"Lead", 'String'>
   readonly assignedTo: Prisma.FieldRef<"Lead", 'String'>

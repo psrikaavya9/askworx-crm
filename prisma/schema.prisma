@@ -126,6 +126,7 @@ model Lead {
 
   stage        PipelineStage @default(NEW)
   priority     LeadPriority  @default(MEDIUM)
+  dealType     String?       // PRODUCT | SERVICE | AMC — maps lead to a pipeline template
 
   dealValue    Decimal?      @db.Decimal(14, 2)
   currency     String        @default("USD")
@@ -168,6 +169,7 @@ model Lead {
   @@index([createdAt])
   @@index([lastActivityAt])
   @@index([isCold])
+  @@index([dealType])
   @@index([phone])                      // duplicate detection — phone lookup
   @@index([firstName, lastName, company]) // duplicate detection — name+company
 }

@@ -3904,6 +3904,7 @@ export const LeadScalarFieldEnum = {
   sourceDetail: 'sourceDetail',
   stage: 'stage',
   priority: 'priority',
+  dealType: 'dealType',
   dealValue: 'dealValue',
   currency: 'currency',
   assignedTo: 'assignedTo',

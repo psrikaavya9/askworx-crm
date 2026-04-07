@@ -1,144 +1,153 @@
 /**
  * POST /api/crm/pipeline/migrate-leads
  *
- * Assigns all leads that currently have no LeadPipeline to the active
- * PRODUCT template, mapping their existing fixed stage to the closest
- * dynamic stage by name. Safe to call multiple times — idempotent.
+ * Assigns all leads that have no LeadPipeline (or are in the wrong template)
+ * to the template matching their `dealType` field:
+ *   dealType = "PRODUCT" → Product Sales template
+ *   dealType = "SERVICE" → Service Delivery template
+ *   dealType = "AMC"     → AMC / Maintenance template
+ *   dealType = null      → defaults to PRODUCT
  *
- * Stage mapping (fixed → dynamic Product template):
- *   NEW       → Inquiry
- *   CONTACTED → Demo
- *   QUALIFIED → Proposal Sent
- *   PROPOSAL  → Negotiation
- *   WON       → Won  (isWon stage)
- *   LOST      → Lost (isLost stage)
+ * Stage mapping (Lead.stage → template stage name):
+ *   PRODUCT : NEW→Inquiry · CONTACTED→Demo · QUALIFIED→Proposal Sent · PROPOSAL→Negotiation · WON→Won · LOST→Lost
+ *   SERVICE : NEW→Inquiry · CONTACTED→Consultation · QUALIFIED→Scoping · PROPOSAL→Proposal · WON→Completed · LOST→Lost
+ *   AMC     : NEW→Prospect · CONTACTED→Site Survey · QUALIFIED→Quotation · PROPOSAL→Agreement · WON→Active · LOST→Expired
  *
- * Response: { migrated: number, mapping: Record<string, string> }
+ * Query params:
+ *   ?remap=true   — also move leads that are already in the wrong template
+ *
+ * Response: { migrated, remapped, distribution }
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Maps the legacy fixed PipelineStage enum value to a stage name in the
-// Product template. Matched case-insensitively against stage.name.
-const STAGE_NAME_MAP: Record<string, string> = {
-  NEW:       "Inquiry",
-  CONTACTED: "Demo",
-  QUALIFIED: "Proposal Sent",
-  PROPOSAL:  "Negotiation",
-  WON:       "Won",
-  LOST:      "Lost",
+// Stage name maps per deal type
+const STAGE_MAPS: Record<string, Record<string, string>> = {
+  PRODUCT: { NEW: "Inquiry", CONTACTED: "Demo",         QUALIFIED: "Proposal Sent", PROPOSAL: "Negotiation", WON: "Won",      LOST: "Lost"    },
+  SERVICE: { NEW: "Inquiry", CONTACTED: "Consultation", QUALIFIED: "Scoping",       PROPOSAL: "Proposal",    WON: "Completed", LOST: "Lost"    },
+  AMC:     { NEW: "Prospect",CONTACTED: "Site Survey",  QUALIFIED: "Quotation",     PROPOSAL: "Agreement",   WON: "Active",    LOST: "Expired" },
 };
 
 const BATCH_SIZE = 50;
 
-export async function POST(req: import("next/server").NextRequest) {
-  // ?remap=true  → also update leads that are already assigned but sitting at the
-  //                 wrong stage (e.g., everything landed in Inquiry from a prior run)
+export async function POST(req: NextRequest) {
   const remap = req.nextUrl.searchParams.get("remap") === "true";
 
-  // Find the default template (PRODUCT, active)
-  const template = await prisma.pipelineTemplate.findFirst({
-    where:   { dealType: "PRODUCT", isActive: true },
+  // ── Load all active templates indexed by dealType ─────────────────────────
+  const templates = await prisma.pipelineTemplate.findMany({
+    where:   { isActive: true },
     include: { stages: { orderBy: { order: "asc" } } },
   });
 
-  if (!template) {
+  if (templates.length === 0) {
     return NextResponse.json(
-      { error: "No active PRODUCT pipeline template found. Run /api/crm/pipeline/seed first." },
-      { status: 400 },
+      { error: "No active pipeline templates found. Run /api/crm/pipeline/seed first." },
+      { status: 400 }
     );
   }
 
-  if (template.stages.length === 0) {
-    return NextResponse.json({ error: "PRODUCT template has no stages." }, { status: 400 });
+  // Build: dealType → { templateId, stageByName }
+  const tmplByType = new Map<string, { id: string; stageByName: Map<string, string>; fallbackId: string }>();
+  for (const t of templates) {
+    const stageByName = new Map(t.stages.map((s) => [s.name.toLowerCase(), s.id]));
+    tmplByType.set(t.dealType, { id: t.id, stageByName, fallbackId: t.stages[0]?.id ?? "" });
   }
 
-  // Build a lookup: stage name (lowercase) → stage id
-  const stageByName = new Map(
-    template.stages.map((s) => [s.name.toLowerCase(), s])
-  );
-  const fallbackStage = template.stages[0];
-
-  // Resolve which dynamic stage a legacy stage maps to
-  function resolveStage(legacyStage: string) {
-    const targetName = STAGE_NAME_MAP[legacyStage]?.toLowerCase();
-    return (targetName ? stageByName.get(targetName) : undefined) ?? fallbackStage;
+  // If no PRODUCT template, refuse — it's the default fallback
+  if (!tmplByType.has("PRODUCT")) {
+    return NextResponse.json({ error: "PRODUCT template not found." }, { status: 400 });
   }
 
-  const mapping: Record<string, number> = {};
+  function resolveStageId(dealType: string, leadStage: string): string {
+    const tmpl = tmplByType.get(dealType) ?? tmplByType.get("PRODUCT")!;
+    const targetName = (STAGE_MAPS[dealType] ?? STAGE_MAPS["PRODUCT"])[leadStage] ?? "";
+    return tmpl.stageByName.get(targetName.toLowerCase()) ?? tmpl.fallbackId;
+  }
+
+  function resolveTemplateId(dealType: string | null): string {
+    const dt = dealType ?? "PRODUCT";
+    return (tmplByType.get(dt) ?? tmplByType.get("PRODUCT")!).id;
+  }
+
+  const distribution: Record<string, number> = {};
   let migrated = 0;
-  let remapped = 0;
+  let remapped  = 0;
 
-  // ── 1. Assign leads that have NO pipeline yet ─────────────────────────────
+  // ── 1. Assign leads with no pipeline ─────────────────────────────────────
   const unassigned = await prisma.lead.findMany({
     where:  { leadPipeline: { is: null } },
-    select: { id: true, stage: true },
+    select: { id: true, stage: true, dealType: true },
   });
 
   for (let i = 0; i < unassigned.length; i += BATCH_SIZE) {
     const batch = unassigned.slice(i, i + BATCH_SIZE);
     await prisma.$transaction(async (tx) => {
       for (const lead of batch) {
-        const targetStage = resolveStage(lead.stage);
+        const dt      = lead.dealType ?? "PRODUCT";
+        const tmplId  = resolveTemplateId(lead.dealType);
+        const stageId = resolveStageId(dt, lead.stage);
+
         await tx.leadPipeline.create({
           data: {
             leadId:         lead.id,
-            templateId:     template.id,
-            currentStageId: targetStage.id,
+            templateId:     tmplId,
+            currentStageId: stageId,
             history: {
               create: {
-                toStageId: targetStage.id,
+                toStageId: stageId,
                 changedBy: "system",
-                reason:    `Migrated from legacy stage: ${lead.stage}`,
+                reason:    `Migrated — dealType:${dt} legacyStage:${lead.stage}`,
               },
             },
           },
         });
-        mapping[targetStage.name] = (mapping[targetStage.name] ?? 0) + 1;
+        distribution[dt] = (distribution[dt] ?? 0) + 1;
         migrated++;
       }
     });
   }
 
-  // ── 2. Remap already-assigned leads to their correct stage ────────────────
+  // ── 2. Remap leads in the wrong template ─────────────────────────────────
   if (remap) {
-    const assigned = await prisma.leadPipeline.findMany({
-      where:   { templateId: template.id },
-      include: { lead: { select: { id: true, stage: true } } },
+    const allPipelines = await prisma.leadPipeline.findMany({
+      include: { lead: { select: { id: true, stage: true, dealType: true } } },
     });
 
-    for (let i = 0; i < assigned.length; i += BATCH_SIZE) {
-      const batch = assigned.slice(i, i + BATCH_SIZE);
+    const wrongTemplate = allPipelines.filter((lp) => {
+      const correctTmplId = resolveTemplateId(lp.lead.dealType);
+      return lp.templateId !== correctTmplId;
+    });
+
+    for (let i = 0; i < wrongTemplate.length; i += BATCH_SIZE) {
+      const batch = wrongTemplate.slice(i, i + BATCH_SIZE);
       await prisma.$transaction(async (tx) => {
         for (const lp of batch) {
-          const targetStage = resolveStage(lp.lead.stage);
-          if (lp.currentStageId === targetStage.id) continue; // already correct
+          const dt      = lp.lead.dealType ?? "PRODUCT";
+          const tmplId  = resolveTemplateId(lp.lead.dealType);
+          const stageId = resolveStageId(dt, lp.lead.stage);
+
           await tx.leadPipeline.update({
             where: { id: lp.id },
             data: {
-              currentStageId: targetStage.id,
+              templateId:     tmplId,
+              currentStageId: stageId,
               stageUpdatedAt: new Date(),
               history: {
                 create: {
                   fromStageId: lp.currentStageId,
-                  toStageId:   targetStage.id,
+                  toStageId:   stageId,
                   changedBy:   "system",
-                  reason:      `Stage remapped from legacy: ${lp.lead.stage}`,
+                  reason:      `Remapped — dealType:${dt}`,
                 },
               },
             },
           });
-          mapping[targetStage.name] = (mapping[targetStage.name] ?? 0) + 1;
+          distribution[dt] = (distribution[dt] ?? 0) + 1;
           remapped++;
         }
       });
     }
   }
 
-  return NextResponse.json({
-    migrated,
-    remapped,
-    template: template.name,
-    mapping,
-  });
+  return NextResponse.json({ migrated, remapped, distribution });
 }
