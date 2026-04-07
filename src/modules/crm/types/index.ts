@@ -108,7 +108,7 @@ export interface LeadStageHistory {
 
 export interface KanbanColumn {
   stage:         PipelineStageConfig;
-  leads:         (Lead & { score: LeadScore | null })[];
+  leads:         (Lead & { score: LeadScore | null; stageUpdatedAt?: string | null; _count?: { notes: number; activities: number } })[];
   totalValue:    number;
   weightedValue: number;
   count:         number;

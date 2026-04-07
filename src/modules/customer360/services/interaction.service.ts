@@ -24,7 +24,60 @@ export async function createInteraction(
   });
   if (!client) throw new Error(`Client not found: ${input.clientId}`);
 
-  return repo.createInteraction(input, staffId);
+  const interaction = await repo.createInteraction(input, staffId);
+
+  // Auto-create a FollowUpReminder when:
+  //   a) nextFollowUp date is explicitly provided, or
+  //   b) outcome text contains "follow-up" (case-insensitive)
+  const needsReminder =
+    input.nextFollowUp ||
+    (input.outcome && /follow[-\s]?up/i.test(input.outcome));
+
+  if (needsReminder) {
+    // Find the most recent active lead linked to this client
+    const lead = await prisma.lead.findFirst({
+      where:   { clientId: input.clientId, stage: { notIn: ["WON", "LOST"] } },
+      orderBy: { updatedAt: "desc" },
+      select:  { id: true, firstName: true, lastName: true },
+    });
+
+    if (lead) {
+      const dueAt = input.nextFollowUp
+        ? new Date(input.nextFollowUp)
+        : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // default: 3 days
+
+      const outcomeSnippet = input.outcome
+        ? ` — ${input.outcome.slice(0, 60)}`
+        : "";
+
+      // Avoid duplicate: skip if an identical pending reminder already exists
+      const existing = await prisma.followUpReminder.findFirst({
+        where: {
+          leadId:    lead.id,
+          assignedTo: staffId,
+          status:    "PENDING",
+          dueAt:     { gte: new Date(dueAt.getTime() - 3_600_000) }, // within ±1h
+        },
+      });
+
+      if (!existing) {
+        await prisma.followUpReminder.create({
+          data: {
+            leadId:      lead.id,
+            type:        "FOLLOW_UP",
+            title:       `Follow up with ${lead.firstName} ${lead.lastName}`,
+            description: `Logged after ${input.type} interaction${outcomeSnippet}`,
+            dueAt,
+            status:      "PENDING",
+            assignedTo:  staffId,
+            createdBy:   staffId,
+          },
+        });
+      }
+    }
+  }
+
+  return interaction;
 }
 
 // ---------------------------------------------------------------------------

@@ -8,10 +8,29 @@ import type { Lead, LeadScore } from "@/modules/crm/types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
-import { Building2, Snowflake } from "lucide-react";
+import { Building2, Snowflake, Clock } from "lucide-react";
+
+/** Returns "Xd" or "Xh" since the given ISO date */
+function timeSince(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  const days = Math.floor(ms / 86_400_000);
+  if (days >= 1) return `${days}d`;
+  const hours = Math.floor(ms / 3_600_000);
+  return `${hours}h`;
+}
+
+/** SLA thresholds: warn after 3 days, alert after 7 days */
+function slaColor(iso: string | null | undefined): string {
+  if (!iso) return "";
+  const days = (Date.now() - new Date(iso).getTime()) / 86_400_000;
+  if (days >= 7) return "text-red-600 bg-red-50 border-red-200";
+  if (days >= 3) return "text-amber-600 bg-amber-50 border-amber-200";
+  return "text-slate-400 bg-slate-50 border-slate-200";
+}
 
 interface LeadCardProps {
-  lead: Lead & { _count?: { notes: number; activities: number }; score?: LeadScore | null };
+  lead: Lead & { _count?: { notes: number; activities: number }; score?: LeadScore | null; stageUpdatedAt?: string | null };
   overlay?: boolean;
 }
 
@@ -81,6 +100,21 @@ export function LeadCard({ lead, overlay }: LeadCardProps) {
         <p className="mt-2 text-sm font-bold text-slate-800">
           {formatCurrency(Number(lead.dealValue))}
         </p>
+      )}
+
+      {/* SLA Timer — shows time in current stage */}
+      {lead.stageUpdatedAt && (
+        <div className="mt-2 flex items-center gap-1">
+          <span
+            className={cn(
+              "inline-flex items-center gap-0.5 rounded border px-1.5 py-0.5 text-[9px] font-bold",
+              slaColor(lead.stageUpdatedAt)
+            )}
+          >
+            <Clock className="h-2.5 w-2.5" />
+            {timeSince(lead.stageUpdatedAt)} in stage
+          </span>
+        </div>
       )}
     </div>
   );

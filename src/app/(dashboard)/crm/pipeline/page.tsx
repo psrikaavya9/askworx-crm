@@ -60,7 +60,10 @@ export default async function PipelinePage({ searchParams }: Props) {
 
     const columns = rawTemplate.stages.map((stage) => {
       const entries = byStage.get(stage.id) ?? [];
-      const leads   = entries.map((lp) => lp.lead);
+      const leads   = entries.map((lp) => ({
+        ...lp.lead,
+        stageUpdatedAt: lp.stageUpdatedAt as unknown as string | null,
+      }));
       const totalValue = leads.reduce((s, l) => s + Number(l.dealValue ?? 0), 0);
       const weightedValue = leads.reduce(
         (s, l) => s + Number(l.dealValue ?? 0) * (stage.probability / 100),
