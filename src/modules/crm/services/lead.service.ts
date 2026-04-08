@@ -250,6 +250,50 @@ export async function bulkMoveStage(input: BulkMoveStageInput) {
 }
 
 // ---------------------------------------------------------------------------
+// Auto Follow-Up Reminder Generation
+// ---------------------------------------------------------------------------
+
+const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+
+/**
+ * Scans all active (non-WON, non-LOST) leads whose lastActivityAt is older
+ * than 3 days and creates a FOLLOW_UP reminder if one doesn't exist yet.
+ * Assigns the reminder to the lead's assignedTo user (defaults to "admin").
+ * Returns { created, skipped }.
+ */
+export async function autoGenerateFollowUpReminders(): Promise<{ created: number; skipped: number }> {
+  const cutoff = new Date(Date.now() - THREE_DAYS_MS);
+
+  const staleLeads = await leadRepo.findStaleLeads(cutoff);
+
+  let created = 0;
+  let skipped = 0;
+
+  for (const lead of staleLeads) {
+    const alreadyHas = await reminderRepo.hasActivePendingFollowUp(lead.id);
+    if (alreadyHas) { skipped++; continue; }
+
+    const assignedTo = lead.assignedTo ?? "admin";
+    const dueAt = new Date();
+
+    await reminderRepo.createReminder(
+      lead.id,
+      {
+        title: `Follow up with ${lead.firstName} ${lead.lastName}`,
+        description: `No activity in 3+ days${lead.company ? ` · ${lead.company}` : ""}`,
+        dueAt: dueAt.toISOString(),
+        assignedTo,
+        createdBy: "system",
+      },
+      "FOLLOW_UP",
+    );
+    created++;
+  }
+
+  return { created, skipped };
+}
+
+// ---------------------------------------------------------------------------
 // Merge
 // ---------------------------------------------------------------------------
 

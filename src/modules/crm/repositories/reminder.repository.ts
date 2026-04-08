@@ -134,6 +134,18 @@ export async function deleteReminder(id: string) {
 // Cold-alert helpers (used by cold-lead detection engine)
 // ---------------------------------------------------------------------------
 
+/** Returns true if there is already an active FOLLOW_UP reminder for this lead. */
+export async function hasActivePendingFollowUp(leadId: string): Promise<boolean> {
+  const count = await prisma.followUpReminder.count({
+    where: {
+      leadId,
+      type: "FOLLOW_UP",
+      status: { in: ["PENDING", "OVERDUE"] },
+    },
+  });
+  return count > 0;
+}
+
 /** Returns true if there is already an active COLD_ALERT for this lead. */
 export async function hasActiveColdAlert(leadId: string): Promise<boolean> {
   const count = await prisma.followUpReminder.count({

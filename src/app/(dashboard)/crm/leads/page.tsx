@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { Users, TrendingUp, Trophy, Clock, BarChart2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { serializePrisma } from "@/lib/serialize";
+import { autoGenerateFollowUpReminders } from "@/modules/crm/services/lead.service";
 
 interface PageProps {
   searchParams: Promise<Record<string, string>>;
@@ -40,6 +41,9 @@ export default async function LeadsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const filters = leadFiltersSchema.parse(params);
   const data = await findLeads(filters);
+
+  // Fire-and-forget: auto-create follow-up reminders for stale leads (>3 days inactive)
+  autoGenerateFollowUpReminders().catch(() => {/* silent — non-critical */});
 
   return (
     <div className="mx-auto max-w-7xl space-y-10 px-8 py-6">

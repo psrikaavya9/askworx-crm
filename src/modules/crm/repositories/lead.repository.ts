@@ -432,3 +432,32 @@ export async function mergeLeads(
     },
   });
 }
+
+// ---------------------------------------------------------------------------
+// Stale-lead query (for auto follow-up reminders)
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns active leads (not WON/LOST) whose lastActivityAt is older than
+ * the given cutoff date (i.e. no activity for > 3 days).
+ * Also includes leads that have never had any activity but were created
+ * before the cutoff.
+ */
+export async function findStaleLeads(cutoff: Date) {
+  return prisma.lead.findMany({
+    where: {
+      stage: { notIn: ["WON", "LOST"] },
+      OR: [
+        { lastActivityAt: { lt: cutoff } },
+        { lastActivityAt: null, createdAt: { lt: cutoff } },
+      ],
+    },
+    select: {
+      id:         true,
+      firstName:  true,
+      lastName:   true,
+      company:    true,
+      assignedTo: true,
+    },
+  });
+}
