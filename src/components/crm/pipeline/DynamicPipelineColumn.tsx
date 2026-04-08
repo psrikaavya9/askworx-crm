@@ -77,7 +77,7 @@ export function DynamicPipelineColumn({ column }: DynamicPipelineColumnProps) {
           ))}
         </SortableContext>
         {leads.length === 0 && (
-          <div className="flex h-16 items-center justify-center text-xs text-slate-300 select-none">
+          <div className="flex min-h-[120px] items-center justify-center rounded-lg border-2 border-dashed border-slate-200 text-xs text-slate-300 select-none">
             Drop here
           </div>
         )}

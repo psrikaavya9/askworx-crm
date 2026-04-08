@@ -7,10 +7,32 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
   type DragStartEvent,
   type DragEndEvent,
 } from "@dnd-kit/core";
+
+/**
+ * Custom collision strategy for multi-column kanban.
+ *
+ * Problem: dnd-kit's `closestCenter` only compares centre-point distances.
+ * When a column is EMPTY its only registered droppable is the container div.
+ * Nearby populated columns always win the closest-centre race, making empty
+ * columns impossible to drop into.
+ *
+ * Fix (recommended in dnd-kit docs):
+ *   1. Try `pointerWithin` first — if the pointer is inside any droppable
+ *      area (including the empty column's container), return that hit.
+ *   2. Fall back to `rectIntersection` — catches cases where the dragged
+ *      card overlaps the column rect even if the pointer is outside it.
+ */
+const multiColumnCollision: CollisionDetection = (args) => {
+  const ptrHits = pointerWithin(args);
+  if (ptrHits.length > 0) return ptrHits;
+  return rectIntersection(args);
+};
 import { DynamicPipelineColumn } from "./DynamicPipelineColumn";
 import { LeadCardOverlay } from "./LeadCard";
 import { WinLossReasonModal, type CloseOutcome } from "./WinLossReasonModal";
@@ -177,7 +199,7 @@ export function DynamicPipelineBoard({ initialData }: DynamicPipelineBoardProps)
       {/* Kanban */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={multiColumnCollision}
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
       >
