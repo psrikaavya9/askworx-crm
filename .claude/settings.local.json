@@ -230,7 +230,10 @@
       "Bash(grep -E \"\\\\.tsx?$\")",
       "Bash(\"C:/Users/psrik/askworx-crm/.env\")",
       "Bash(printf \"# Twilio — WhatsApp messaging\\\\nTWILIO_SID=your_twilio_account_sid\\\\nTWILIO_AUTH_TOKEN=your_twilio_auth_token\\\\n# Sandbox: +14155238886  |  Production: your Twilio WhatsApp number\\\\nTWILIO_WHATSAPP_FROM=+14155238886\\\\n\")",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in {**d.get\\('dependencies',{}\\), **d.get\\('devDependencies',{}\\)}.items\\(\\) if 'faker' in k.lower\\(\\)}\\)\\)\")",
+      "Bash(npx tsx:*)",
+      "Bash(git:*)"
     ]
   }
 }

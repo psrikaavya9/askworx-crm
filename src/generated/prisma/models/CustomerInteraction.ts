@@ -59,6 +59,10 @@ export type CustomerInteractionMinAggregateOutputType = {
   approved: boolean | null
   rejected: boolean | null
   ownerNote: string | null
+  reviewStatus: string | null
+  reviewedBy: string | null
+  reviewedAt: Date | null
+  reviewReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -84,6 +88,10 @@ export type CustomerInteractionMaxAggregateOutputType = {
   approved: boolean | null
   rejected: boolean | null
   ownerNote: string | null
+  reviewStatus: string | null
+  reviewedBy: string | null
+  reviewedAt: Date | null
+  reviewReason: string | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -110,6 +118,10 @@ export type CustomerInteractionCountAggregateOutputType = {
   approved: number
   rejected: number
   ownerNote: number
+  reviewStatus: number
+  reviewedBy: number
+  reviewedAt: number
+  reviewReason: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -149,6 +161,10 @@ export type CustomerInteractionMinAggregateInputType = {
   approved?: true
   rejected?: true
   ownerNote?: true
+  reviewStatus?: true
+  reviewedBy?: true
+  reviewedAt?: true
+  reviewReason?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -174,6 +190,10 @@ export type CustomerInteractionMaxAggregateInputType = {
   approved?: true
   rejected?: true
   ownerNote?: true
+  reviewStatus?: true
+  reviewedBy?: true
+  reviewedAt?: true
+  reviewReason?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -200,6 +220,10 @@ export type CustomerInteractionCountAggregateInputType = {
   approved?: true
   rejected?: true
   ownerNote?: true
+  reviewStatus?: true
+  reviewedBy?: true
+  reviewedAt?: true
+  reviewReason?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -313,6 +337,10 @@ export type CustomerInteractionGroupByOutputType = {
   approved: boolean
   rejected: boolean
   ownerNote: string | null
+  reviewStatus: string
+  reviewedBy: string | null
+  reviewedAt: Date | null
+  reviewReason: string | null
   createdAt: Date
   updatedAt: Date
   _count: CustomerInteractionCountAggregateOutputType | null
@@ -362,6 +390,10 @@ export type CustomerInteractionWhereInput = {
   approved?: Prisma.BoolFilter<"CustomerInteraction"> | boolean
   rejected?: Prisma.BoolFilter<"CustomerInteraction"> | boolean
   ownerNote?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
+  reviewStatus?: Prisma.StringFilter<"CustomerInteraction"> | string
+  reviewedBy?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"CustomerInteraction"> | Date | string | null
+  reviewReason?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"CustomerInteraction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CustomerInteraction"> | Date | string
   client?: Prisma.XOR<Prisma.ClientScalarRelationFilter, Prisma.ClientWhereInput>
@@ -390,6 +422,10 @@ export type CustomerInteractionOrderByWithRelationInput = {
   approved?: Prisma.SortOrder
   rejected?: Prisma.SortOrder
   ownerNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewStatus?: Prisma.SortOrder
+  reviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   client?: Prisma.ClientOrderByWithRelationInput
@@ -421,6 +457,10 @@ export type CustomerInteractionWhereUniqueInput = Prisma.AtLeast<{
   approved?: Prisma.BoolFilter<"CustomerInteraction"> | boolean
   rejected?: Prisma.BoolFilter<"CustomerInteraction"> | boolean
   ownerNote?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
+  reviewStatus?: Prisma.StringFilter<"CustomerInteraction"> | string
+  reviewedBy?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"CustomerInteraction"> | Date | string | null
+  reviewReason?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"CustomerInteraction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CustomerInteraction"> | Date | string
   client?: Prisma.XOR<Prisma.ClientScalarRelationFilter, Prisma.ClientWhereInput>
@@ -449,6 +489,10 @@ export type CustomerInteractionOrderByWithAggregationInput = {
   approved?: Prisma.SortOrder
   rejected?: Prisma.SortOrder
   ownerNote?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewStatus?: Prisma.SortOrder
+  reviewedBy?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  reviewReason?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.CustomerInteractionCountOrderByAggregateInput
@@ -483,6 +527,10 @@ export type CustomerInteractionScalarWhereWithAggregatesInput = {
   approved?: Prisma.BoolWithAggregatesFilter<"CustomerInteraction"> | boolean
   rejected?: Prisma.BoolWithAggregatesFilter<"CustomerInteraction"> | boolean
   ownerNote?: Prisma.StringNullableWithAggregatesFilter<"CustomerInteraction"> | string | null
+  reviewStatus?: Prisma.StringWithAggregatesFilter<"CustomerInteraction"> | string
+  reviewedBy?: Prisma.StringNullableWithAggregatesFilter<"CustomerInteraction"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"CustomerInteraction"> | Date | string | null
+  reviewReason?: Prisma.StringNullableWithAggregatesFilter<"CustomerInteraction"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"CustomerInteraction"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"CustomerInteraction"> | Date | string
 }
@@ -507,6 +555,10 @@ export type CustomerInteractionCreateInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   client: Prisma.ClientCreateNestedOneWithoutInteractionsInput
@@ -535,6 +587,10 @@ export type CustomerInteractionUncheckedCreateInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -559,6 +615,10 @@ export type CustomerInteractionUpdateInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneRequiredWithoutInteractionsNestedInput
@@ -587,6 +647,10 @@ export type CustomerInteractionUncheckedUpdateInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -613,6 +677,10 @@ export type CustomerInteractionCreateManyInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -637,6 +705,10 @@ export type CustomerInteractionUpdateManyMutationInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -663,6 +735,10 @@ export type CustomerInteractionUncheckedUpdateManyInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -699,6 +775,10 @@ export type CustomerInteractionCountOrderByAggregateInput = {
   approved?: Prisma.SortOrder
   rejected?: Prisma.SortOrder
   ownerNote?: Prisma.SortOrder
+  reviewStatus?: Prisma.SortOrder
+  reviewedBy?: Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrder
+  reviewReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -730,6 +810,10 @@ export type CustomerInteractionMaxOrderByAggregateInput = {
   approved?: Prisma.SortOrder
   rejected?: Prisma.SortOrder
   ownerNote?: Prisma.SortOrder
+  reviewStatus?: Prisma.SortOrder
+  reviewedBy?: Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrder
+  reviewReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -755,6 +839,10 @@ export type CustomerInteractionMinOrderByAggregateInput = {
   approved?: Prisma.SortOrder
   rejected?: Prisma.SortOrder
   ownerNote?: Prisma.SortOrder
+  reviewStatus?: Prisma.SortOrder
+  reviewedBy?: Prisma.SortOrder
+  reviewedAt?: Prisma.SortOrder
+  reviewReason?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -877,6 +965,10 @@ export type CustomerInteractionCreateWithoutClientInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   staff: Prisma.StaffCreateNestedOneWithoutCustomerInteractionsInput
@@ -903,6 +995,10 @@ export type CustomerInteractionUncheckedCreateWithoutClientInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -958,6 +1054,10 @@ export type CustomerInteractionScalarWhereInput = {
   approved?: Prisma.BoolFilter<"CustomerInteraction"> | boolean
   rejected?: Prisma.BoolFilter<"CustomerInteraction"> | boolean
   ownerNote?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
+  reviewStatus?: Prisma.StringFilter<"CustomerInteraction"> | string
+  reviewedBy?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
+  reviewedAt?: Prisma.DateTimeNullableFilter<"CustomerInteraction"> | Date | string | null
+  reviewReason?: Prisma.StringNullableFilter<"CustomerInteraction"> | string | null
   createdAt?: Prisma.DateTimeFilter<"CustomerInteraction"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"CustomerInteraction"> | Date | string
 }
@@ -982,6 +1082,10 @@ export type CustomerInteractionCreateWithoutStaffInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   client: Prisma.ClientCreateNestedOneWithoutInteractionsInput
@@ -1008,6 +1112,10 @@ export type CustomerInteractionUncheckedCreateWithoutStaffInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1059,6 +1167,10 @@ export type CustomerInteractionCreateManyClientInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1083,6 +1195,10 @@ export type CustomerInteractionUpdateWithoutClientInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   staff?: Prisma.StaffUpdateOneRequiredWithoutCustomerInteractionsNestedInput
@@ -1109,6 +1225,10 @@ export type CustomerInteractionUncheckedUpdateWithoutClientInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1134,6 +1254,10 @@ export type CustomerInteractionUncheckedUpdateManyWithoutClientInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1159,6 +1283,10 @@ export type CustomerInteractionCreateManyStaffInput = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: string | null
+  reviewStatus?: string
+  reviewedBy?: string | null
+  reviewedAt?: Date | string | null
+  reviewReason?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1183,6 +1311,10 @@ export type CustomerInteractionUpdateWithoutStaffInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneRequiredWithoutInteractionsNestedInput
@@ -1209,6 +1341,10 @@ export type CustomerInteractionUncheckedUpdateWithoutStaffInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1234,6 +1370,10 @@ export type CustomerInteractionUncheckedUpdateManyWithoutStaffInput = {
   approved?: Prisma.BoolFieldUpdateOperationsInput | boolean
   rejected?: Prisma.BoolFieldUpdateOperationsInput | boolean
   ownerNote?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewStatus?: Prisma.StringFieldUpdateOperationsInput | string
+  reviewedBy?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  reviewReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1262,6 +1402,10 @@ export type CustomerInteractionSelect<ExtArgs extends runtime.Types.Extensions.I
   approved?: boolean
   rejected?: boolean
   ownerNote?: boolean
+  reviewStatus?: boolean
+  reviewedBy?: boolean
+  reviewedAt?: boolean
+  reviewReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   client?: boolean | Prisma.ClientDefaultArgs<ExtArgs>
@@ -1290,6 +1434,10 @@ export type CustomerInteractionSelectCreateManyAndReturn<ExtArgs extends runtime
   approved?: boolean
   rejected?: boolean
   ownerNote?: boolean
+  reviewStatus?: boolean
+  reviewedBy?: boolean
+  reviewedAt?: boolean
+  reviewReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   client?: boolean | Prisma.ClientDefaultArgs<ExtArgs>
@@ -1318,6 +1466,10 @@ export type CustomerInteractionSelectUpdateManyAndReturn<ExtArgs extends runtime
   approved?: boolean
   rejected?: boolean
   ownerNote?: boolean
+  reviewStatus?: boolean
+  reviewedBy?: boolean
+  reviewedAt?: boolean
+  reviewReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   client?: boolean | Prisma.ClientDefaultArgs<ExtArgs>
@@ -1346,11 +1498,15 @@ export type CustomerInteractionSelectScalar = {
   approved?: boolean
   rejected?: boolean
   ownerNote?: boolean
+  reviewStatus?: boolean
+  reviewedBy?: boolean
+  reviewedAt?: boolean
+  reviewReason?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type CustomerInteractionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "staffId" | "type" | "date" | "duration" | "outcome" | "notes" | "gpsLat" | "gpsLng" | "photos" | "nextFollowUp" | "messageContent" | "messageSubject" | "direction" | "externalId" | "counterpartyEmail" | "counterpartyPhone" | "approved" | "rejected" | "ownerNote" | "createdAt" | "updatedAt", ExtArgs["result"]["customerInteraction"]>
+export type CustomerInteractionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "staffId" | "type" | "date" | "duration" | "outcome" | "notes" | "gpsLat" | "gpsLng" | "photos" | "nextFollowUp" | "messageContent" | "messageSubject" | "direction" | "externalId" | "counterpartyEmail" | "counterpartyPhone" | "approved" | "rejected" | "ownerNote" | "reviewStatus" | "reviewedBy" | "reviewedAt" | "reviewReason" | "createdAt" | "updatedAt", ExtArgs["result"]["customerInteraction"]>
 export type CustomerInteractionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.ClientDefaultArgs<ExtArgs>
   staff?: boolean | Prisma.StaffDefaultArgs<ExtArgs>
@@ -1392,6 +1548,10 @@ export type $CustomerInteractionPayload<ExtArgs extends runtime.Types.Extensions
     approved: boolean
     rejected: boolean
     ownerNote: string | null
+    reviewStatus: string
+    reviewedBy: string | null
+    reviewedAt: Date | null
+    reviewReason: string | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["customerInteraction"]>
@@ -1840,6 +2000,10 @@ export interface CustomerInteractionFieldRefs {
   readonly approved: Prisma.FieldRef<"CustomerInteraction", 'Boolean'>
   readonly rejected: Prisma.FieldRef<"CustomerInteraction", 'Boolean'>
   readonly ownerNote: Prisma.FieldRef<"CustomerInteraction", 'String'>
+  readonly reviewStatus: Prisma.FieldRef<"CustomerInteraction", 'String'>
+  readonly reviewedBy: Prisma.FieldRef<"CustomerInteraction", 'String'>
+  readonly reviewedAt: Prisma.FieldRef<"CustomerInteraction", 'DateTime'>
+  readonly reviewReason: Prisma.FieldRef<"CustomerInteraction", 'String'>
   readonly createdAt: Prisma.FieldRef<"CustomerInteraction", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"CustomerInteraction", 'DateTime'>
 }

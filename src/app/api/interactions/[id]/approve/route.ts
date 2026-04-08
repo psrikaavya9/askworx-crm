@@ -1,46 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
-import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/lib/middleware/authMiddleware";
+import type { RouteCtx } from "@/lib/middleware/authMiddleware";
+import * as svc from "@/modules/customer360/services/interaction.service";
 
 // ---------------------------------------------------------------------------
 // PATCH /api/interactions/:id/approve
 // ---------------------------------------------------------------------------
 
-export async function PATCH(
+export const PATCH = withAuth(async (
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params;
+  user,
+  ctx?: RouteCtx,
+) => {
+  const { id } = await ctx!.params as { id: string };
 
-  const existing = await prisma.customerInteraction.findUnique({
-    where:  { id },
-    select: { id: true, approved: true },
-  });
+  const reviewer = {
+    reviewedBy: user.sub,
+    reviewedAt: new Date(),
+  };
 
-  if (!existing) {
-    return NextResponse.json(
-      { success: false, error: "Interaction not found" },
-      { status: 404 },
-    );
+  let updated;
+  try {
+    updated = await svc.approveInteraction(id, { ownerNote: undefined }, reviewer);
+  } catch (err) {
+    const msg = (err as Error).message;
+    const status = msg.includes("not found") ? 404 : 422;
+    return NextResponse.json({ success: false, error: msg }, { status });
   }
 
-  if (existing.approved) {
-    return NextResponse.json(
-      { success: false, error: "Interaction is already approved" },
-      { status: 422 },
-    );
-  }
-
-  const updated = await prisma.customerInteraction.update({
-    where: { id },
-    data:  { approved: true, rejected: false },
-  });
-
-  console.log(`[approve] interaction=${id} clientId=${updated.clientId} → approved`);
-
-  // Bust the Customer 360 cache for this client so the timeline
-  // reflects the newly approved interaction on the next page load.
+  console.log(`[approve] interaction=${id} by=${user.sub} → approved`);
   revalidateTag(`c360-${updated.clientId}`, "default");
 
   return NextResponse.json({ success: true, data: updated });
-}
+});

@@ -429,7 +429,8 @@ export const ModelName = {
   CustomerHealthScore: 'CustomerHealthScore',
   ComplianceItem: 'ComplianceItem',
   ExpenseCategoryBudget: 'ExpenseCategoryBudget',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  AppNotification: 'AppNotification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -445,7 +446,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "lead" | "leadScore" | "pipelineTemplate" | "pipelineStageConfig" | "leadPipeline" | "leadStageHistory" | "leadNote" | "leadActivity" | "followUpReminder" | "client" | "leadCaptureForm" | "leadCaptureSubmission" | "project" | "task" | "timeLog" | "invoice" | "invoiceItem" | "payment" | "expense" | "preApproval" | "staff" | "refreshToken" | "otpCode" | "trustedDevice" | "session" | "passwordHistory" | "loginEvent" | "product" | "stockMovement" | "savedReport" | "reportExecution" | "attendance" | "hrDocument" | "docAcknowledgement" | "hrVideo" | "videoWatchLog" | "videoQuiz" | "videoQuizQuestion" | "videoQuizAttempt" | "fieldVisit" | "customerInteraction" | "complaint" | "customerHealthScore" | "complianceItem" | "expenseCategoryBudget" | "auditLog"
+    modelProps: "lead" | "leadScore" | "pipelineTemplate" | "pipelineStageConfig" | "leadPipeline" | "leadStageHistory" | "leadNote" | "leadActivity" | "followUpReminder" | "client" | "leadCaptureForm" | "leadCaptureSubmission" | "project" | "task" | "timeLog" | "invoice" | "invoiceItem" | "payment" | "expense" | "preApproval" | "staff" | "refreshToken" | "otpCode" | "trustedDevice" | "session" | "passwordHistory" | "loginEvent" | "product" | "stockMovement" | "savedReport" | "reportExecution" | "attendance" | "hrDocument" | "docAcknowledgement" | "hrVideo" | "videoWatchLog" | "videoQuiz" | "videoQuizQuestion" | "videoQuizAttempt" | "fieldVisit" | "customerInteraction" | "complaint" | "customerHealthScore" | "complianceItem" | "expenseCategoryBudget" | "auditLog" | "appNotification"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -3853,6 +3854,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AppNotification: {
+      payload: Prisma.$AppNotificationPayload<ExtArgs>
+      fields: Prisma.AppNotificationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AppNotificationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AppNotificationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>
+        }
+        findFirst: {
+          args: Prisma.AppNotificationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AppNotificationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>
+        }
+        findMany: {
+          args: Prisma.AppNotificationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>[]
+        }
+        create: {
+          args: Prisma.AppNotificationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>
+        }
+        createMany: {
+          args: Prisma.AppNotificationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AppNotificationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>[]
+        }
+        delete: {
+          args: Prisma.AppNotificationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>
+        }
+        update: {
+          args: Prisma.AppNotificationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>
+        }
+        deleteMany: {
+          args: Prisma.AppNotificationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AppNotificationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AppNotificationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>[]
+        }
+        upsert: {
+          args: Prisma.AppNotificationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AppNotificationPayload>
+        }
+        aggregate: {
+          args: Prisma.AppNotificationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAppNotification>
+        }
+        groupBy: {
+          args: Prisma.AppNotificationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppNotificationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AppNotificationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AppNotificationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -4605,6 +4680,10 @@ export const CustomerInteractionScalarFieldEnum = {
   approved: 'approved',
   rejected: 'rejected',
   ownerNote: 'ownerNote',
+  reviewStatus: 'reviewStatus',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  reviewReason: 'reviewReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -4683,6 +4762,19 @@ export const AuditLogScalarFieldEnum = {
 } as const
 
 export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+export const AppNotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  interactionId: 'interactionId',
+  type: 'type',
+  message: 'message',
+  isRead: 'isRead',
+  createdAt: 'createdAt'
+} as const
+
+export type AppNotificationScalarFieldEnum = (typeof AppNotificationScalarFieldEnum)[keyof typeof AppNotificationScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -5474,6 +5566,7 @@ export type GlobalOmitConfig = {
   complianceItem?: Prisma.ComplianceItemOmit
   expenseCategoryBudget?: Prisma.ExpenseCategoryBudgetOmit
   auditLog?: Prisma.AuditLogOmit
+  appNotification?: Prisma.AppNotificationOmit
 }
 
 /* Types for Logging */

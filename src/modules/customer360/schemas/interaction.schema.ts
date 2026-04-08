@@ -91,8 +91,25 @@ export type RequestEditInput = z.infer<typeof requestEditSchema>;
 export const reviewFiltersSchema = z.object({
   status:   z.enum(["PENDING", "EDIT_REQUESTED", "ALL"]).optional().default("ALL"),
   type:     z.enum(["CALL", "VISIT", "NOTE", "EMAIL", "WHATSAPP"]).optional(),
+  staffId:  z.string().optional(),
+  clientId: z.string().optional(),
+  dateFrom: z.string().datetime().optional(),
+  dateTo:   z.string().datetime().optional(),
   page:     z.coerce.number().int().positive().optional().default(1),
-  pageSize: z.coerce.number().int().min(1).max(50).optional().default(30), // capped at 50 — each row joins client + staff
+  pageSize: z.coerce.number().int().min(1).max(50).optional().default(30),
 });
 
 export type ReviewFiltersInput = z.infer<typeof reviewFiltersSchema>;
+
+// ---------------------------------------------------------------------------
+// Bulk action — apply approve / reject / request-edit to multiple interactions
+// ---------------------------------------------------------------------------
+
+export const bulkActionSchema = z.object({
+  ids:      z.array(z.string().min(1)).min(1, "At least one ID is required").max(50, "Max 50 at a time"),
+  action:   z.enum(["approve", "reject", "request-edit"]),
+  reason:   z.string().optional(),    // required for reject (dropdown category)
+  note:     z.string().max(500).optional(), // optional free-text for reject / request-edit
+});
+
+export type BulkActionInput = z.infer<typeof bulkActionSchema>;

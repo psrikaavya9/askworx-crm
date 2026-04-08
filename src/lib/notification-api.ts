@@ -12,9 +12,13 @@ export {
   getNotificationCount,
   markNotificationRead,
   markAllNotificationsRead,
+  listAppNotifications,
+  getAppNotificationCount,
+  markAppNotificationRead,
+  markAllAppNotificationsRead,
 } from "./vault-api";
 
-export type { VaultNotification, ListNotificationsParams } from "./vault-api";
+export type { VaultNotification, ListNotificationsParams, AppNotification } from "./vault-api";
 
 // ---------------------------------------------------------------------------
 // UI helpers

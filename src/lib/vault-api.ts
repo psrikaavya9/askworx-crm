@@ -254,3 +254,47 @@ export async function markAllNotificationsRead(): Promise<
 > {
   return vaultFetch("/api/hr-notifications/read-all", { method: "PATCH" });
 }
+
+// ---------------------------------------------------------------------------
+// App Notifications (interaction review events — main DB)
+// ---------------------------------------------------------------------------
+
+export interface AppNotification {
+  id:            string;
+  userId:        string;
+  interactionId: string | null;
+  type:          string;
+  message:       string;
+  isRead:        boolean;
+  createdAt:     string;
+}
+
+export async function listAppNotifications(limit = 30): Promise<AppNotification[]> {
+  try {
+    const res = await vaultFetch<{ success: boolean; data: AppNotification[] }>(
+      `/api/app-notifications?limit=${limit}`,
+    );
+    return res.data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getAppNotificationCount(): Promise<number> {
+  try {
+    const res = await vaultFetch<{ success: boolean; data: { unreadCount: number } }>(
+      "/api/app-notifications/count",
+    );
+    return res.data?.unreadCount ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function markAppNotificationRead(id: string): Promise<void> {
+  await vaultFetch(`/api/app-notifications/${id}/read`, { method: "PATCH" }).catch(() => null);
+}
+
+export async function markAllAppNotificationsRead(): Promise<void> {
+  await vaultFetch("/api/app-notifications/read-all", { method: "PATCH" }).catch(() => null);
+}

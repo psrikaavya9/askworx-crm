@@ -247,3 +247,8 @@ export type ExpenseCategoryBudget = Prisma.ExpenseCategoryBudgetModel
  * 
  */
 export type AuditLog = Prisma.AuditLogModel
+/**
+ * Model AppNotification
+ * 
+ */
+export type AppNotification = Prisma.AppNotificationModel

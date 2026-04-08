@@ -1378,6 +1378,12 @@ model CustomerInteraction {
   rejected     Boolean         @default(false)
   ownerNote    String?         @db.Text
 
+  // Extended review workflow metadata
+  reviewStatus String          @default("PENDING")  // PENDING | APPROVED | REJECTED | EDIT_REQUESTED
+  reviewedBy   String?                              // staffId who performed the review action
+  reviewedAt   DateTime?                            // timestamp of the review action
+  reviewReason String?                              // rejection reason category
+
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
@@ -1541,4 +1547,22 @@ model AuditLog {
   @@index([userId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// AppNotification — in-app notifications for interaction review events
+// ---------------------------------------------------------------------------
+
+model AppNotification {
+  id            String   @id @default(cuid())
+  userId        String                           // recipient staffId
+  interactionId String?                          // optional link to CustomerInteraction
+  type          String                           // INTERACTION_REVIEW_NEEDED | INTERACTION_APPROVED | INTERACTION_REJECTED | INTERACTION_EDIT_REQUESTED | INTERACTION_ESCALATED
+  message       String   @db.Text
+  isRead        Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([interactionId])
 }

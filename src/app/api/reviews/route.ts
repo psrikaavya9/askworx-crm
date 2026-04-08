@@ -26,6 +26,10 @@ export const GET = withAuth(
     const parsed = reviewFiltersSchema.safeParse({
       status:   searchParams.get("status")   ?? undefined,
       type:     searchParams.get("type")     ?? undefined,
+      staffId:  searchParams.get("staffId")  ?? undefined,
+      clientId: searchParams.get("clientId") ?? undefined,
+      dateFrom: searchParams.get("dateFrom") ?? undefined,
+      dateTo:   searchParams.get("dateTo")   ?? undefined,
       page:     searchParams.get("page")     ?? undefined,
       pageSize: searchParams.get("pageSize") ?? undefined,
     });

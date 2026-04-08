@@ -4,30 +4,19 @@ import { serializePrisma } from "@/lib/serialize";
 import { ReviewsDashboard } from "@/components/reviews/ReviewsDashboard";
 import type { ReviewRow } from "@/components/reviews/ReviewsDashboard";
 
-// ---------------------------------------------------------------------------
-// Reviews page — Owner only
-//
-// Shows all interactions that have not yet been approved so the owner can
-// approve, reject, or send back for editing in one place.
-//
-// This is a server component: data is fetched at request time so the list
-// is always fresh on navigation. Actions (approve / reject / request-edit)
-// are handled client-side via the authenticated API client.
-// ---------------------------------------------------------------------------
-
 export const dynamic = "force-dynamic";
 
 async function fetchPendingInteractions() {
   return prisma.customerInteraction.findMany({
     where:   { approved: false },
-    orderBy: { date: "desc" },
+    orderBy: { createdAt: "asc" },   // oldest first — surface SLA urgency
     take:    200,
     include: {
       client: {
         select: { id: true, firstName: true, lastName: true, company: true },
       },
       staff: {
-        select: { firstName: true, lastName: true, department: true },
+        select: { id: true, firstName: true, lastName: true, department: true },
       },
     },
   });
@@ -42,6 +31,13 @@ export default async function ReviewsPage() {
   const pendingCount       = rows.filter((r) => !r.rejected && !r.ownerNote).length;
   const editRequestedCount = rows.filter((r) => !r.rejected &&  r.ownerNote != null).length;
   const rejectedCount      = rows.filter((r) =>  r.rejected).length;
+
+  // Count items with SLA > 48h (escalated)
+  const now = Date.now();
+  const escalatedCount = rows.filter((r) => {
+    const ageMs = now - new Date(r.createdAt).getTime();
+    return ageMs > 48 * 60 * 60 * 1000 && !r.rejected && !r.approved;
+  }).length;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-6 py-6">
@@ -62,9 +58,10 @@ export default async function ReviewsPage() {
         {/* Summary KPIs */}
         <div className="flex items-center gap-3">
           {[
-            { label: "Pending",       value: pendingCount,       color: "text-gray-700",    bg: "bg-gray-50   border-gray-200" },
-            { label: "Edit Requested",value: editRequestedCount, color: "text-orange-700",  bg: "bg-orange-50 border-orange-200" },
-            { label: "Rejected",      value: rejectedCount,      color: "text-red-700",     bg: "bg-red-50    border-red-200" },
+            { label: "Pending",        value: pendingCount,       color: "text-gray-700",   bg: "bg-gray-50   border-gray-200"   },
+            { label: "Edit Requested", value: editRequestedCount, color: "text-orange-700", bg: "bg-orange-50 border-orange-200" },
+            { label: "Rejected",       value: rejectedCount,      color: "text-red-700",    bg: "bg-red-50    border-red-200"    },
+            { label: "Escalated",      value: escalatedCount,     color: "text-red-700",    bg: "bg-red-50    border-red-200"    },
           ].map(({ label, value, color, bg }) => (
             <div key={label} className={`rounded-xl border px-4 py-2.5 text-center ${bg}`}>
               <p className={`text-xl font-bold ${color}`}>{value}</p>

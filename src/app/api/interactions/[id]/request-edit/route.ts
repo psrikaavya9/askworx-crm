@@ -18,7 +18,7 @@ type Ctx = { params: Promise<{ id: string }> };
 // ---------------------------------------------------------------------------
 
 export const PATCH = withAuth(
-  roleCheck(["OWNER"])(async (req: NextRequest, _user, ctx?: Ctx) => {
+  roleCheck(["OWNER"])(async (req: NextRequest, user, ctx?: Ctx) => {
     const { id } = await ctx!.params;
 
     const body   = await req.json().catch(() => ({}));
@@ -31,8 +31,10 @@ export const PATCH = withAuth(
       );
     }
 
+    const reviewer = { reviewedBy: user.sub, reviewedAt: new Date() };
+
     try {
-      const interaction = await svc.requestEditInteraction(id, parsed.data);
+      const interaction = await svc.requestEditInteraction(id, parsed.data, reviewer);
       return NextResponse.json({ success: true, data: interaction });
     } catch (err) {
       return NextResponse.json(

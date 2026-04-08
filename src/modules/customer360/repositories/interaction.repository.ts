@@ -11,12 +11,14 @@ import type {
 // ---------------------------------------------------------------------------
 
 const CLIENT_SELECT = {
+  id:        true,
   firstName: true,
   lastName:  true,
   company:   true,
 } as const;
 
 const STAFF_SELECT = {
+  id:         true,
   firstName:  true,
   lastName:   true,
   department: true,
@@ -85,15 +87,15 @@ export async function createInteraction(
       notes:              input.notes              ?? null,
       gpsLat:             input.gpsLat             ?? null,
       gpsLng:             input.gpsLng             ?? null,
-      // Prisma Json? fields require DbNull (not JS null) when explicitly clearing
       photos:             input.photos ?? Prisma.DbNull,
       nextFollowUp:       input.nextFollowUp ? new Date(input.nextFollowUp) : null,
-      // EMAIL / WHATSAPP messaging fields
       direction:          input.direction          ?? null,
       messageContent:     input.messageContent     ?? null,
       messageSubject:     input.messageSubject     ?? null,
       counterpartyEmail:  input.counterpartyEmail  ?? null,
       counterpartyPhone:  input.counterpartyPhone  ?? null,
+      // new review fields — defaults
+      reviewStatus: "PENDING",
     },
     include: {
       client: { select: CLIENT_SELECT },
@@ -119,11 +121,6 @@ export interface WebhookInteractionData {
   notes?:             string | null;
 }
 
-/**
- * Creates a webhook-sourced interaction.
- * - auto-approved (no manual review required)
- * - carries messaging-specific fields not present in manual interactions
- */
 export async function createWebhookInteraction(
   input:   WebhookInteractionData,
   staffId: string,
@@ -141,9 +138,9 @@ export async function createWebhookInteraction(
       counterpartyEmail:  input.counterpartyEmail ?? null,
       counterpartyPhone:  input.counterpartyPhone ?? null,
       notes:              input.notes ?? null,
-      // Auto-approved — these are factual system records, not field reports
-      approved: true,
-      rejected: false,
+      approved:     true,
+      rejected:     false,
+      reviewStatus: "APPROVED",
     },
     include: {
       client: { select: CLIENT_SELECT },
@@ -157,13 +154,11 @@ export async function createWebhookInteraction(
 // ---------------------------------------------------------------------------
 
 export async function findPendingForReview(filters: ReviewFiltersInput) {
-  const { status, type, page, pageSize } = filters;
+  const { status, type, staffId, clientId, dateFrom, dateTo, page, pageSize } = filters;
   const skip = (page - 1) * pageSize;
 
-  // Base: never approved
   const where: Prisma.CustomerInteractionWhereInput = { approved: false };
 
-  // Status refinement
   if (status === "PENDING") {
     where.rejected  = false;
     where.ownerNote = null;
@@ -171,19 +166,26 @@ export async function findPendingForReview(filters: ReviewFiltersInput) {
     where.rejected   = false;
     where.ownerNote  = { not: null };
   }
-  // "ALL" = anything not yet approved (pending + edit-requested + rejected)
 
-  if (type) where.type = type;
+  if (type)     where.type     = type;
+  if (staffId)  where.staffId  = staffId;
+  if (clientId) where.clientId = clientId;
+
+  if (dateFrom || dateTo) {
+    where.createdAt = {};
+    if (dateFrom) where.createdAt.gte = new Date(dateFrom);
+    if (dateTo)   where.createdAt.lte = new Date(dateTo);
+  }
 
   const [data, total] = await Promise.all([
     prisma.customerInteraction.findMany({
       where,
-      orderBy: { date: "desc" },
+      orderBy: { createdAt: "asc" },   // oldest first so SLA urgency is visible
       skip,
       take: pageSize,
       include: {
-        client: { select: { id: true, firstName: true, lastName: true, company: true } },
-        staff:  { select: { firstName: true, lastName: true, department: true } },
+        client: { select: CLIENT_SELECT },
+        staff:  { select: STAFF_SELECT },
       },
     }),
     prisma.customerInteraction.count({ where }),
@@ -193,19 +195,28 @@ export async function findPendingForReview(filters: ReviewFiltersInput) {
 }
 
 // ---------------------------------------------------------------------------
-// Write — owner actions
+// Write — owner review actions
 // ---------------------------------------------------------------------------
 
-// Approved interactions are locked — no further updates are permitted.
-// The service layer enforces this guard before calling either function below.
+export interface ReviewerInfo {
+  reviewedBy:  string;   // staffId
+  reviewedAt:  Date;
+}
 
-export async function approveInteraction(id: string, ownerNote?: string) {
+export async function approveInteraction(
+  id:       string,
+  reviewer: ReviewerInfo,
+  ownerNote?: string,
+) {
   return prisma.customerInteraction.update({
     where: { id },
     data: {
-      approved:  true,
-      rejected:  false,
-      ownerNote: ownerNote ?? null,
+      approved:     true,
+      rejected:     false,
+      ownerNote:    ownerNote ?? null,
+      reviewStatus: "APPROVED",
+      reviewedBy:   reviewer.reviewedBy,
+      reviewedAt:   reviewer.reviewedAt,
     },
     include: {
       client: { select: CLIENT_SELECT },
@@ -214,13 +225,22 @@ export async function approveInteraction(id: string, ownerNote?: string) {
   });
 }
 
-export async function requestEditInteraction(id: string, ownerNote: string) {
+export async function rejectInteraction(
+  id:           string,
+  reviewer:     ReviewerInfo,
+  ownerNote:    string,
+  reviewReason: string,
+) {
   return prisma.customerInteraction.update({
     where: { id },
     data: {
-      approved:  false,
-      rejected:  false,
+      rejected:     true,
+      approved:     false,
       ownerNote,
+      reviewStatus: "REJECTED",
+      reviewedBy:   reviewer.reviewedBy,
+      reviewedAt:   reviewer.reviewedAt,
+      reviewReason,
     },
     include: {
       client: { select: CLIENT_SELECT },
@@ -229,17 +249,131 @@ export async function requestEditInteraction(id: string, ownerNote: string) {
   });
 }
 
-export async function rejectInteraction(id: string, ownerNote: string) {
+export async function requestEditInteraction(
+  id:       string,
+  reviewer: ReviewerInfo,
+  ownerNote: string,
+) {
   return prisma.customerInteraction.update({
     where: { id },
     data: {
-      rejected:  true,
-      approved:  false,
+      approved:     false,
+      rejected:     false,
       ownerNote,
+      reviewStatus: "EDIT_REQUESTED",
+      reviewedBy:   reviewer.reviewedBy,
+      reviewedAt:   reviewer.reviewedAt,
     },
     include: {
       client: { select: CLIENT_SELECT },
       staff:  { select: STAFF_SELECT },
     },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Bulk review actions (max 50 at a time)
+// ---------------------------------------------------------------------------
+
+export async function bulkApprove(ids: string[], reviewer: ReviewerInfo) {
+  return prisma.customerInteraction.updateMany({
+    where: { id: { in: ids }, approved: false },
+    data: {
+      approved:     true,
+      rejected:     false,
+      reviewStatus: "APPROVED",
+      reviewedBy:   reviewer.reviewedBy,
+      reviewedAt:   reviewer.reviewedAt,
+    },
+  });
+}
+
+export async function bulkReject(
+  ids:          string[],
+  reviewer:     ReviewerInfo,
+  ownerNote:    string,
+  reviewReason: string,
+) {
+  return prisma.customerInteraction.updateMany({
+    where: { id: { in: ids }, approved: false },
+    data: {
+      rejected:     true,
+      approved:     false,
+      ownerNote,
+      reviewStatus: "REJECTED",
+      reviewedBy:   reviewer.reviewedBy,
+      reviewedAt:   reviewer.reviewedAt,
+      reviewReason,
+    },
+  });
+}
+
+export async function bulkRequestEdit(
+  ids:      string[],
+  reviewer: ReviewerInfo,
+  ownerNote: string,
+) {
+  return prisma.customerInteraction.updateMany({
+    where: { id: { in: ids }, approved: false },
+    data: {
+      approved:     false,
+      rejected:     false,
+      ownerNote,
+      reviewStatus: "EDIT_REQUESTED",
+      reviewedBy:   reviewer.reviewedBy,
+      reviewedAt:   reviewer.reviewedAt,
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// App notifications
+// ---------------------------------------------------------------------------
+
+export async function createAppNotification(data: {
+  userId:        string;
+  interactionId?: string;
+  type:          string;
+  message:       string;
+}) {
+  return prisma.appNotification.create({ data });
+}
+
+export async function createAppNotificationsMany(entries: {
+  userId:        string;
+  interactionId?: string;
+  type:          string;
+  message:       string;
+}[]) {
+  if (entries.length === 0) return;
+  return prisma.appNotification.createMany({ data: entries });
+}
+
+export async function findAppNotifications(userId: string, opts?: { unreadOnly?: boolean; limit?: number }) {
+  return prisma.appNotification.findMany({
+    where: {
+      userId,
+      ...(opts?.unreadOnly ? { isRead: false } : {}),
+    },
+    orderBy: { createdAt: "desc" },
+    take: opts?.limit ?? 30,
+  });
+}
+
+export async function countUnreadAppNotifications(userId: string) {
+  return prisma.appNotification.count({ where: { userId, isRead: false } });
+}
+
+export async function markAppNotificationRead(id: string, userId: string) {
+  return prisma.appNotification.updateMany({
+    where: { id, userId, isRead: false },
+    data:  { isRead: true },
+  });
+}
+
+export async function markAllAppNotificationsRead(userId: string) {
+  return prisma.appNotification.updateMany({
+    where: { userId, isRead: false },
+    data:  { isRead: true },
   });
 }

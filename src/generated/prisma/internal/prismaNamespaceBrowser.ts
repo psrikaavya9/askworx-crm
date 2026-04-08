@@ -96,7 +96,8 @@ export const ModelName = {
   CustomerHealthScore: 'CustomerHealthScore',
   ComplianceItem: 'ComplianceItem',
   ExpenseCategoryBudget: 'ExpenseCategoryBudget',
-  AuditLog: 'AuditLog'
+  AuditLog: 'AuditLog',
+  AppNotification: 'AppNotification'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -828,6 +829,10 @@ export const CustomerInteractionScalarFieldEnum = {
   approved: 'approved',
   rejected: 'rejected',
   ownerNote: 'ownerNote',
+  reviewStatus: 'reviewStatus',
+  reviewedBy: 'reviewedBy',
+  reviewedAt: 'reviewedAt',
+  reviewReason: 'reviewReason',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -906,6 +911,19 @@ export const AuditLogScalarFieldEnum = {
 } as const
 
 export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
+
+
+export const AppNotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  interactionId: 'interactionId',
+  type: 'type',
+  message: 'message',
+  isRead: 'isRead',
+  createdAt: 'createdAt'
+} as const
+
+export type AppNotificationScalarFieldEnum = (typeof AppNotificationScalarFieldEnum)[keyof typeof AppNotificationScalarFieldEnum]
 
 
 export const SortOrder = {
