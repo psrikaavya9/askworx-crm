@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,43 +21,41 @@ const sizeClasses = {
 };
 
 export function Modal({ open, onClose, title, description, children, size = "md" }: ModalProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-
+  // Escape key closes modal
   useEffect(() => {
+    if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
-    if (open) document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, [open, onClose]);
 
+  // Prevent body scroll while open
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [open]);
 
+  // Do NOT render anything when closed — prevents invisible overlay blocking clicks
   if (!open) return null;
 
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
-    >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop — clicking it closes the modal */}
+      <div
+        className="absolute inset-0 bg-gray-900/60"
+        onClick={onClose}
+      />
 
-      {/* Panel */}
+      {/* Panel — stopPropagation prevents backdrop click from firing */}
       <div
         className={cn(
-          "relative w-full rounded-2xl bg-white shadow-2xl",
+          "relative z-10 w-full rounded-2xl bg-white shadow-2xl",
           "flex flex-col max-h-[90vh]",
           sizeClasses[size]
         )}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5 shrink-0">
