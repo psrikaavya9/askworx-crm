@@ -8,6 +8,7 @@ import { getCustomerTimeline } from "@/modules/customer360/services/timeline.ser
 import { calculateHealthScore } from "@/lib/services/healthScore";
 import { Customer360Client } from "@/components/customer360/Customer360Client";
 import { HealthScoreCard } from "@/components/customer/HealthScoreCard";
+import { ActivityTimeline } from "@/components/customer360/ActivityTimeline";
 import type {
   C360Client,
   C360Interaction,
@@ -179,6 +180,9 @@ export default async function Customer360Page({ params }: Props) {
         }
         timeline={timeline as TimelineEvent[]}
       />
+
+      {/* Always-visible unified timeline strip — full history lives in the Timeline tab above */}
+      <ActivityTimeline timeline={timeline as TimelineEvent[]} />
     </div>
   );
 }
