@@ -24,7 +24,7 @@ export interface ReviewRow {
   id:           string;
   type:         InteractionType;
   date:         string;
-  createdAt:    string;
+  createdAt:    string | null;
   staffId:      string;
   duration:     number | null;
   outcome:      string | null;
@@ -55,9 +55,19 @@ interface SlaInfo {
   escalated: boolean;
 }
 
-function getSlaInfo(createdAt: string, reviewStatus: string): SlaInfo | null {
+function getSlaInfo(createdAt: string | null, reviewStatus: string, fallbackDate?: string): SlaInfo | null {
   if (reviewStatus !== "PENDING") return null;
-  const ms    = Date.now() - new Date(createdAt).getTime();
+
+  // Fall back to interaction date if createdAt is missing
+  const raw = createdAt || fallbackDate || null;
+  if (!raw) return null;
+
+  const ts = new Date(raw).getTime();
+  if (isNaN(ts)) return null;          // invalid date — show "—" safely
+
+  const ms    = Date.now() - ts;
+  if (ms < 0) return null;             // future date — skip
+
   const hours = ms / (1000 * 60 * 60);
   const days  = Math.floor(hours / 24);
   const rem   = Math.floor(hours % 24);
@@ -80,8 +90,8 @@ const SLA_BADGE_CLS: Record<SlaInfo["tier"], string> = {
   red:    "bg-red-50    border-red-200    text-red-700",
 };
 
-function SlaBadge({ createdAt, reviewStatus }: { createdAt: string; reviewStatus: string }) {
-  const sla = getSlaInfo(createdAt, reviewStatus);
+function SlaBadge({ createdAt, reviewStatus, date }: { createdAt: string | null; reviewStatus: string; date?: string }) {
+  const sla = getSlaInfo(createdAt, reviewStatus, date);
   if (!sla) return <span className="text-gray-300 text-xs">—</span>;
   return (
     <div className="space-y-0.5">
@@ -772,12 +782,12 @@ export function ReviewsDashboard({
     if (staffFilter  && r.staff?.id  !== staffFilter)  return false;
     if (clientFilter && r.client?.id !== clientFilter) return false;
       if (dateFrom) {
-        const created = new Date(r.createdAt).getTime();
-        if (created < new Date(dateFrom).getTime()) return false;
+        const created = new Date(r.createdAt ?? r.date).getTime();
+        if (isNaN(created) || created < new Date(dateFrom).getTime()) return false;
       }
       if (dateTo) {
-        const created = new Date(r.createdAt).getTime();
-        if (created > new Date(dateTo + "T23:59:59").getTime()) return false;
+        const created = new Date(r.createdAt ?? r.date).getTime();
+        if (isNaN(created) || created > new Date(dateTo + "T23:59:59").getTime()) return false;
       }
       return true;
     });
@@ -786,8 +796,8 @@ export function ReviewsDashboard({
 
     // Sort by SLA hours: PENDING rows sorted by age, non-PENDING rows go to bottom
     return [...filtered].sort((a, b) => {
-      const aHours = getSlaInfo(a.createdAt, a.reviewStatus)?.hours ?? -1;
-      const bHours = getSlaInfo(b.createdAt, b.reviewStatus)?.hours ?? -1;
+      const aHours = getSlaInfo(a.createdAt, a.reviewStatus, a.date)?.hours ?? -1;
+      const bHours = getSlaInfo(b.createdAt, b.reviewStatus, b.date)?.hours ?? -1;
       return slaSort === "desc" ? bHours - aHours : aHours - bHours;
     });
   }, [rows, statusFilter, typeFilter, staffFilter, clientFilter, dateFrom, dateTo, slaSort]);
@@ -1171,7 +1181,7 @@ export function ReviewsDashboard({
 
                       {/* SLA — Date → SLA → Outcome */}
                       <td className="px-4 py-3.5">
-                        <SlaBadge createdAt={row.createdAt} reviewStatus={row.reviewStatus} />
+                        <SlaBadge createdAt={row.createdAt} reviewStatus={row.reviewStatus} date={row.date} />
                       </td>
 
                       {/* Outcome */}
