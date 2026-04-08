@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -34,6 +34,11 @@ export function DynamicPipelineBoard({ initialData }: DynamicPipelineBoardProps)
   const [columns,      setColumns]      = useState<KanbanColumn[]>(initialData.columns);
   const [activeLeadId, setActiveLeadId] = useState<string | null>(null);
   const [pendingMove,  setPendingMove]  = useState<PendingMove | null>(null);
+
+  // Sync columns when the parent provides new data (template switch)
+  useEffect(() => {
+    setColumns(initialData.columns);
+  }, [initialData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })

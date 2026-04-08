@@ -21,5 +21,5 @@ interface Props {
 }
 
 export function PipelineBoardClient({ initialData }: Props) {
-  return <Board initialData={initialData} />;
+  return <Board key={initialData.template.id} initialData={initialData} />;
 }

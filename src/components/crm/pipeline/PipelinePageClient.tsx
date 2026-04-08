@@ -165,7 +165,7 @@ export function PipelinePageClient({
 
       {/* ── Board ───────────────────────────────────────────────────────── */}
       {kanban ? (
-        <DynamicPipelineBoard initialData={kanban} />
+        <DynamicPipelineBoard key={kanban.template.id} initialData={kanban} />
       ) : (
         <div className="flex items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 py-24 text-sm text-slate-400">
           Select a pipeline template above to view the board.
