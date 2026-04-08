@@ -94,9 +94,9 @@ export function ActivityTimeline({ timeline, limit = 20 }: Props) {
                       {meta.label}
                     </span>
                   </div>
-                  {item.description && (
-                    <p className="mt-0.5 text-xs text-gray-500 line-clamp-1">{item.description}</p>
-                  )}
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {item.description || "No details available"}
+                  </p>
                 </div>
 
                 {/* Date */}

@@ -22,6 +22,13 @@ function iso(date: Date): string {
   return date.toISOString();
 }
 
+/** Converts "HIGH" → "High", "CRITICAL" → "Critical" without charAt risk. */
+function titleCase(s: string): string {
+  if (!s) return s;
+  const lower = s.toLowerCase();
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+}
+
 // ---------------------------------------------------------------------------
 // Source mappers — one per Prisma model
 // ---------------------------------------------------------------------------
@@ -262,7 +269,7 @@ function mapComplaints(
     events.push({
       id:          eid("COMPLAINT_RAISED", c.id),
       type:        "COMPLAINT_RAISED",
-      title:       `${c.priority.charAt(0) + c.priority.slice(1).toLowerCase()} complaint raised`,
+      title:       `${titleCase(c.priority)} complaint raised`,
       date:        iso(c.createdAt),
       icon:        "MessageSquareWarning",
       description: snippet,

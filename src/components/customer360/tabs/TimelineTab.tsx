@@ -133,7 +133,7 @@ function MetaChips({ event }: { event: TimelineEvent }) {
     return (
       <div className="mt-2">
         <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", PRIORITY_STYLE[m.priority] ?? "bg-gray-100 text-gray-600")}>
-          {m.priority.charAt(0) + m.priority.slice(1).toLowerCase()} priority
+          {m.priority ? m.priority.charAt(0).toUpperCase() + m.priority.slice(1).toLowerCase() : "Unknown"} priority
         </span>
       </div>
     );
